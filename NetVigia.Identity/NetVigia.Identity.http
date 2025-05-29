@@ -1,0 +1,6 @@
+@NetVigia.Identity_HostAddress = http://localhost:5210
+
+GET {{NetVigia.Identity_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
