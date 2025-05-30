@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetVigia.API", "NetVigia.AP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetVigia.Identity", "NetVigia.Identity\NetVigia.Identity.csproj", "{91475A1F-4474-4DF7-9D54-AC9090152EFD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetVigia.DTO", "NetVigia.DTO\NetVigia.DTO.csproj", "{36AB5549-01CB-4D7F-843E-4780AA4C728C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{91475A1F-4474-4DF7-9D54-AC9090152EFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91475A1F-4474-4DF7-9D54-AC9090152EFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91475A1F-4474-4DF7-9D54-AC9090152EFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36AB5549-01CB-4D7F-843E-4780AA4C728C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36AB5549-01CB-4D7F-843E-4780AA4C728C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36AB5549-01CB-4D7F-843E-4780AA4C728C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36AB5549-01CB-4D7F-843E-4780AA4C728C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
