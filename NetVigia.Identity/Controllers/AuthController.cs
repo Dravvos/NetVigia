@@ -163,6 +163,7 @@ namespace NetVigia.Identity.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         public async Task<IActionResult> DeleteAccount(Guid userId)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
@@ -177,7 +178,6 @@ namespace NetVigia.Identity.Controllers
         }
 
         [HttpGet]
-
         public IActionResult user()
         {
             HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);

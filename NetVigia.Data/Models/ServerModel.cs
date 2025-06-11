@@ -26,5 +26,9 @@ namespace NetVigia.Data.Models
         [Required]
         [Column("Active")]
         public bool Active { get; set; }
+
+        [Required]
+        [Column("UserId")]
+        public Guid UserId { get; set; }
     }
 }

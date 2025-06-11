@@ -21,5 +21,7 @@ namespace NetVigia.Data
 
 
         public DbSet<ServerModel> Servers { get; set; }
+        public DbSet<TabelaGeralModel> TabelaGeral { get; set; }
+        public DbSet<TabelaGeralItemModel> TabelaGeralItem { get; set; }
     }
 }
