@@ -10,16 +10,16 @@ using NetVigia.DTO;
 
 namespace NetVigia.BLL.QueryHandler
 {
-    public class GetTabelaGeralItensByTabelaGeralIdHandler : IRequestHandler<GetTabelaGeralItensByTabelaGeralId, List<TabelaGeralItemDTO>>
+    public class GetTabelaGeralItensByTabelaGeralIdQueryHandler : IRequestHandler<GetTabelaGeralItensByTabelaGeralIdQuery, List<TabelaGeralItemDTO>>
     {
         private readonly ITabelaGeralItemService _service;
 
-        public GetTabelaGeralItensByTabelaGeralIdHandler(ITabelaGeralItemService service)
+        public GetTabelaGeralItensByTabelaGeralIdQueryHandler(ITabelaGeralItemService service)
         {
             _service = service;
         }
 
-        public async Task<List<TabelaGeralItemDTO>> Handle(GetTabelaGeralItensByTabelaGeralId request, CancellationToken cancellationToken)
+        public async Task<List<TabelaGeralItemDTO>> Handle(GetTabelaGeralItensByTabelaGeralIdQuery request, CancellationToken cancellationToken)
         {
             return await _service.GetAllItemsAsync(request.tabelaGeralId);
         }

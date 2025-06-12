@@ -8,21 +8,22 @@ using Apache.IoTDB;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.DTO;
 using NetVigia.Data.TimeSeries;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Logging;
 
 namespace NetVigia.BLL.Repository
 {
     public class IoTDBRepository : IIoTDBRepository
     {
         private readonly SessionPool sessionPool;
+        private readonly IServerRepository _serverRepository;
 
-        public IoTDBRepository()
+        public IoTDBRepository(IServerRepository serverRepository)
         {
             sessionPool = new BaseDal().sessionPool;
+            _serverRepository = serverRepository;
         }
 
-        private CheckDTO? ParseRowRecord(RowRecord rowRecord, string siteUrl)
+        private async Task<CheckDTO?> ParseRowRecord(RowRecord rowRecord, string? siteUrl)
         {
             try
             {
@@ -33,14 +34,17 @@ namespace NetVigia.BLL.Repository
 
                 bool.TryParse(fields[0].ToString(), out bool up);
                 int.TryParse(fields[1].ToString(), out int statusCode);
-                float.TryParse(fields[2].ToString(), out float latency);                
+                float.TryParse(fields[2].ToString(), out float latency);
+
+                var server = await _serverRepository.GetByUrl(siteUrl);
 
                 var dto = new CheckDTO
                 {
-                    URL = siteUrl,
+                    Server = server,
+                    ServerId = server.Id.GetValueOrDefault(),
                     Timestamp = timestamp,
                     StatusCode = statusCode,
-                    Latency = latency,
+                    ResponseTimeInMs = latency,
                     Up = up
                 };
                 return dto;
@@ -57,7 +61,7 @@ namespace NetVigia.BLL.Repository
             return DateTimeOffset.FromUnixTimeMilliseconds(timestamp).UtcDateTime;
         }
 
-        public async Task<List<CheckDTO>> ListChecks(string query, string url)
+        public async Task<List<CheckDTO>> ListChecks(string query, string? url)
         {
             var result = new List<CheckDTO>();
 
@@ -71,7 +75,7 @@ namespace NetVigia.BLL.Repository
                 {
                     var row = dataSet.Next();
                     var timestamp = row.GetDateTime();
-                    var dto = ParseRowRecord(row, url);
+                    var dto = await ParseRowRecord(row, url);
                     if (dto != null)
                         result.Add(dto);
                 }
@@ -90,7 +94,7 @@ namespace NetVigia.BLL.Repository
                 if (ret != 0)
                 {
                     int ret1 = await sessionPool.CreateTimeSeries(url + "." + measurements[0], TSDataType.INT32, TSEncoding.TS_2DIFF, Compressor.LZ4);
-                    int ret2= await sessionPool.CreateTimeSeries(url + "." + measurements[1], TSDataType.FLOAT, TSEncoding.GORILLA, Compressor.LZ4);
+                    int ret2 = await sessionPool.CreateTimeSeries(url + "." + measurements[1], TSDataType.FLOAT, TSEncoding.GORILLA, Compressor.LZ4);
                     int ret3 = await sessionPool.CreateTimeSeries(url + "." + measurements[2], TSDataType.BOOLEAN, TSEncoding.RLE, Compressor.LZ4);
                     for (int i = 0; i < measurements.Count; i++)
                     {

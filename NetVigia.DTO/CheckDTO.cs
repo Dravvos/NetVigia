@@ -8,11 +8,14 @@ namespace NetVigia.DTO
 {
     public class CheckDTO
     {
-        public string? URL { get; set; }
+        public Guid ServerId { get; set; }
         public bool Up { get; set; }
         public int StatusCode { get; set; }
-        public float Latency { get; set; }
+        public float ResponseTimeInMs { get; set; }
         public DateTime Timestamp { get; set; }
+        public string? ErrorMessage { get; set; }
+
+        public ServerDTO? Server { get; set; }
     }
 
 }

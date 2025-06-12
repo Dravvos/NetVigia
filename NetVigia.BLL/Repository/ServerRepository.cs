@@ -35,6 +35,12 @@ namespace NetVigia.BLL.Repository
             await con.SaveChangesAsync();
         }
 
+        public async Task<List<ServerDTO>> GetActiveWebsitesAsync()
+        {
+            var model = await con.Servers.Where(x => x.Active).ToListAsync();
+            return Map<List<ServerDTO>>.Convert(model);
+        }
+
         public async Task<List<ServerDTO>> GetAllAsync(Guid userId)
         {
             var model = await con.Servers.Where(x => x.UserId == userId).ToListAsync();
@@ -49,18 +55,28 @@ namespace NetVigia.BLL.Repository
 
         public async Task<List<ServerDTO>> GetByNomeAsync(Guid userId, string nome)
         {
-            var model = await con.Servers.Where(x => x.UserId==userId && x.URL.ToLower().Contains(nome.ToLower())).ToListAsync();
+            var model = await con.Servers.Where(x => x.UserId == userId && x.URL.ToLower().Contains(nome.ToLower())).ToListAsync();
             return Map<List<ServerDTO>>.Convert(model);
+        }
+
+        public async Task<ServerDTO> GetByUrl(string? url)
+        {
+            var model = await con.Servers.FirstOrDefaultAsync(x => x.URL == url);
+            return Map<ServerDTO>.Convert(model);
         }
 
         public async Task UpdateAsync(ServerDTO dto)
         {
-            var model = await con.Servers.FindAsync(dto.Id);
+            var model = await con.Servers.FirstAsync(x => x.Id == dto.Id);
 
             model.ExpectedStatusCode = dto.ExpectedStatusCode;
             model.URL = dto.URL;
-            model.CheckInterval = dto.CheckInterval;
+            model.CheckIntervalSeconds = dto.CheckIntervalSeconds;
             model.Active = dto.Active;
+            model.TimeoutInSeconds = dto.TimeoutInSeconds;
+            model.ExpectedContent = dto.ExpectedContent;
+            model.Name = dto.Name;
+            model.ExpectedStatusCode = dto.ExpectedStatusCode;
             model.UsuarioAlteracao = dto.UsuarioAlteracao;
             model.DataAlteracao = dto.DataAlteracao;
 

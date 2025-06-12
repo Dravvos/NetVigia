@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using NetVigia.BLL.Command;
+using NetVigia.BLL.Command.TabelaGeral;
 using NetVigia.BLL.Service.Interfaces;
 
-namespace NetVigia.BLL.CommandHandler
+namespace NetVigia.BLL.CommandHandler.TabelaGeral
 {
     public class DeleteTabelaGeralItemCommandHandler : IRequestHandler<DeleteTabelaGeralItemCommand, bool>
     {

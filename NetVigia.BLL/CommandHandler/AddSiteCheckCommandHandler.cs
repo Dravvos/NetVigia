@@ -7,22 +7,37 @@ using MediatR;
 using NetVigia.BLL.Command;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.BLL.Service.Interfaces;
+using NetVigia.BLL.Services.Interfaces;
 using NetVigia.Data.TimeSeries;
+using NetVigia.DTO;
 
 namespace NetVigia.BLL.CommandHandler
 {
-    public class AddSiteCheckCommandHandler : IRequestHandler<AddSiteCheckCommand, bool>
+    public class AddSiteCheckCommandHandler : IRequestHandler<AddSiteCheckCommand, CheckDTO>
     {
-        private readonly IIoTDBService _service;
+        private readonly ICheckService _checkService;
+        private readonly IIoTDBService _ioTDBService;
+        private readonly IServerRepository _serverRepository;
 
-        public AddSiteCheckCommandHandler(IIoTDBService service)
+        public AddSiteCheckCommandHandler(ICheckService checkService, IIoTDBService ioTDBService, IServerRepository serverRepository)
         {
-            _service = service;
+            _checkService = checkService;
+            _ioTDBService = ioTDBService;
+            _serverRepository = serverRepository;
         }
 
-        public async Task<bool> Handle(AddSiteCheckCommand request, CancellationToken cancellationToken)
+        public async Task<CheckDTO> Handle(AddSiteCheckCommand request, CancellationToken cancellationToken)
         {
-            return await _service.Insert(request.dto);
+            var serverDTO = await _serverRepository.GetByIdAsync(request.serverId);
+            if (serverDTO == null)
+                throw new KeyNotFoundException($"Server with ID {request.serverId} not found.");
+            var result = await _checkService.PerformCheckAsync(serverDTO);
+            
+            result.Server = serverDTO;
+
+            await _ioTDBService.Insert(result);
+
+            return result;
         }
     }
 }

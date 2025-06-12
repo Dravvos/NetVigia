@@ -21,7 +21,7 @@ namespace NetVigia.BLL.Service
 
         private void ValidateDTO(ServerDTO dto)
         {
-            if (dto.CheckInterval<0)
+            if (dto.CheckIntervalSeconds < 0)
             {
                 throw new ArgumentOutOfRangeException("O intervalo de checagem tem que ser maior que zero segundos");
             }

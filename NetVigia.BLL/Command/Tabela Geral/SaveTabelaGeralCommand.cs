@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MediatR;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.Command
+namespace NetVigia.BLL.Command.TabelaGeral
 {
     public record SaveTabelaGeralCommand(TabelaGeralDTO dto) : IRequest;
 }

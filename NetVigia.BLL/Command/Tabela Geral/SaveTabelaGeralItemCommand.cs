@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MediatR;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.Query
+namespace NetVigia.BLL.Command.TabelaGeral
 {
-    public record GetChecksByDate(DateTime startDate, DateTime endDate, string url): IRequest<List<CheckDTO>>;
+    public record SaveTabelaGeralItemCommand(TabelaGeralItemDTO dto) : IRequest;
 }

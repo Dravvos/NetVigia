@@ -10,9 +10,12 @@ namespace NetVigia.DTO
 {
     public class ServerDTO : BaseDTO
     {
+        public string? Name { get; set; }
         public string? URL { get; set; }
-        public int CheckInterval { get; set; }
-        public int ExpectedStatusCode { get; set; }
-        public bool Active { get; set; }
+        public int CheckIntervalSeconds { get; set; } = 300;
+        public int ExpectedStatusCode { get; set; } = 200;
+        public bool Active { get; set; } = true;
+        public int TimeoutInSeconds { get; set; } = 10;
+        public string? ExpectedContent { get; set; }
     }
 }

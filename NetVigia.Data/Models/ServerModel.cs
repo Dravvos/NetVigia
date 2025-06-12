@@ -11,21 +11,33 @@ namespace NetVigia.Data.Models
     public class ServerModel:BaseModel
     {
         [Required]
+        [Column("Name")]
+        public string? Name { get; set; }
+
+        [Required]
         [Column("URL")]
         public string? URL { get; set; }
 
         [Required]
-        [Column("CheckInterval")]
+        [Column("CheckIntervalSeconds")]
         [Range(1,int.MaxValue)]
-        public int CheckInterval { get; set; }
+        public int CheckIntervalSeconds { get; set; }
 
         [Required]
         [Column("ExpectedStatusCode")]
         public int ExpectedStatusCode { get; set; }
+        
+        [Column("ExpectedConten")]
+        public string? ExpectedContent { get; set; }
 
         [Required]
         [Column("Active")]
         public bool Active { get; set; }
+
+        [Required]
+        [Column("TimeoutInSeconds")]
+        [Range(1, int.MaxValue)]
+        public int TimeoutInSeconds { get; set; } = 10;
 
         [Required]
         [Column("UserId")]

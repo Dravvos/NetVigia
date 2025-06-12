@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using NetVigia.BLL.Command;
+using NetVigia.BLL.Command.Server;
 using NetVigia.BLL.Service.Interfaces;
 
-namespace NetVigia.BLL.CommandHandler
+namespace NetVigia.BLL.CommandHandler.Server
 {
     public class SaveServerCommandHandler : IRequestHandler<SaveServerCommand>
     {

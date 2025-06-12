@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NetVigia.BLL.Command;
@@ -9,6 +10,7 @@ namespace NetVigia.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CheckController : ControllerBase
     {
         private readonly ISender _sender;
@@ -18,12 +20,12 @@ namespace NetVigia.API.Controllers
             _sender = sender;
         }
 
-        [HttpGet("{url}/{startDate:datetime}/{endDate:datetime}")]
-        public async Task<IActionResult> GetChecks(string url, DateTime startDate, DateTime endDate)
+        [HttpGet("{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetChecks(Guid serverId, DateTime startDate, DateTime endDate, [FromQuery] int count = 20)
         {
             try
             {
-                var cmd = new GetChecksByDate(startDate, endDate, url);
+                var cmd = new GetChecksByDateQuery(startDate, endDate, serverId);
                 var checks = await _sender.Send(cmd);
                 return Ok(checks);
             }
@@ -35,16 +37,34 @@ namespace NetVigia.API.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Check([FromBody] CheckDTO dto)
+        [HttpGet("uptime/{serverId}")]
+        public async Task<IActionResult> GetUptimePercentage(Guid serverId, [FromQuery] int hours = 24)
         {
             try
             {
-                var cmd = new AddSiteCheckCommand(dto);
-                var @checked = await _sender.Send(cmd);
-                if (@checked)
-                    return StatusCode(StatusCodes.Status201Created);
-                else return StatusCode(StatusCodes.Status500InternalServerError, "Failed to insert check data.");
+                var period = TimeSpan.FromHours(hours);
+                var cmd = new GetUptimePercentageQuery(serverId, period);
+                var uptimePercentage = await _sender.Send(cmd);
+                return Ok(uptimePercentage);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
+        [HttpPost("perform/{serverId:guid}")]
+        public async Task<IActionResult> PerformCheck(Guid serverId)
+        {
+            try
+            {
+                var cmd = new AddSiteCheckCommand(serverId);
+                var check = await _sender.Send(cmd);
+                if (check == null)
+                    return NotFound("Check could not be performed.");
+                return Ok(check);
             }
             catch (ArgumentException ex)
             {

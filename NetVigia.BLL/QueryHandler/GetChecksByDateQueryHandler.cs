@@ -10,19 +10,19 @@ using NetVigia.DTO;
 
 namespace NetVigia.BLL.QueryHandler
 {
-    public class GetChecksByDateHandler : IRequestHandler<GetChecksByDate, List<CheckDTO>>
+    public class GetChecksByDateQueryHandler : IRequestHandler<GetChecksByDateQuery, List<CheckDTO>>
     {
 
         private readonly IIoTDBService _service;
 
-        public GetChecksByDateHandler(IIoTDBService service)
+        public GetChecksByDateQueryHandler(IIoTDBService service)
         {
             _service = service;
         }
 
-        public async Task<List<CheckDTO>> Handle(GetChecksByDate request, CancellationToken cancellationToken)
+        public async Task<List<CheckDTO>> Handle(GetChecksByDateQuery request, CancellationToken cancellationToken)
         {
-            var checks = await _service.ListChecks(request.url, request.startDate, request.endDate);
+            var checks = await _service.ListChecks(request.serverId, request.startDate, request.endDate);
             return checks;
         }
     }

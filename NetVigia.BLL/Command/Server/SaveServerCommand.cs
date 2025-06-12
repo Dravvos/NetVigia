@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
+using NetVigia.DTO;
 
-namespace NetVigia.BLL.Command
+namespace NetVigia.BLL.Command.Server
 {
-    public record DeleteTabelaGeralItemCommand(Guid id) : IRequest<bool>;
-    
+    public record SaveServerCommand(ServerDTO dto) : IRequest;
 }

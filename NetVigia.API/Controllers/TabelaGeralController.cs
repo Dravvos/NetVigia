@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NetVigia.API.Utils;
-using NetVigia.BLL.Command;
+using NetVigia.BLL.Command.TabelaGeral;
 using NetVigia.BLL.Query;
 using NetVigia.DTO;
 
@@ -18,7 +18,7 @@ namespace NetVigia.API.Controllers
     public class TabelaGeralController : ControllerBase
     {
         private readonly ISender _sender;
-
+        ILogger
         public TabelaGeralController(ISender sender)
         {
             _sender = sender;
@@ -79,7 +79,7 @@ namespace NetVigia.API.Controllers
         [HttpGet, Authorize]
         public async Task<IActionResult> GetTabelaGeralItemById(Guid id)
         {
-            var cmd = new GetTabelaGeralItemById(id);            
+            var cmd = new GetTabelaGeralItemByIdQuery(id);            
             var tabelaGeral = await _sender.Send(cmd);
             if (tabelaGeral == null) 
                 return NotFound();
@@ -99,7 +99,7 @@ namespace NetVigia.API.Controllers
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
 
-                var query = new GetTabelaGeralItensByTabelaGeralId(tabelaGeralId);
+                var query = new GetTabelaGeralItensByTabelaGeralIdQuery(tabelaGeralId);
                 var tabelasGerais = await _sender.Send(query);
 
                 if (tabelasGerais == null || tabelasGerais.Any() == false)

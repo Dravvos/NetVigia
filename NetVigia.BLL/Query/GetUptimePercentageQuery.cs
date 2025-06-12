@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using NetVigia.DTO;
 
-namespace NetVigia.BLL.Command
+namespace NetVigia.BLL.Query
 {
-    public record SaveServerCommand(ServerDTO dto) : IRequest;
+    public record GetUptimePercentageQuery(Guid serverId, TimeSpan period) : IRequest<double>;
 }

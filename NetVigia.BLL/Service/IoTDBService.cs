@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Apache.IoTDB;
+using Microsoft.Extensions.Logging;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.BLL.Service.Interfaces;
 using NetVigia.DTO;
@@ -13,11 +14,16 @@ namespace NetVigia.BLL.Service
     public class IoTDBService : IIoTDBService
     {
         private readonly IIoTDBRepository _repository;
+        private readonly IServerRepository _serverRepository;
+        private readonly ILogger<IoTDBService> _logger;
 
-        public IoTDBService(IIoTDBRepository repository)
+        public IoTDBService(IIoTDBRepository repository, IServerRepository serverRepository, ILogger<IoTDBService> logger)
         {
             _repository = repository;
+            _serverRepository = serverRepository;
+            _logger = logger;
         }
+
         private string SanitizeSiteUrl(string url) =>
       url.Replace("https://", "")
          .Replace("http://", "")
@@ -27,7 +33,9 @@ namespace NetVigia.BLL.Service
 
         public async Task<bool> Insert(CheckDTO check)
         {
-            string url = $"root.netvigia.{SanitizeSiteUrl(check.URL)}";
+            _logger.LogInformation("Inserting check for server {ServerId} at {Timestamp}", check.Server.Id, check.Timestamp);
+
+            string url = $"root.netvigia.{SanitizeSiteUrl(check.Server.URL)}";
 
             var measurements = new List<string>
             {
@@ -40,15 +48,29 @@ namespace NetVigia.BLL.Service
             var values = new List<object>
             {
                 check.StatusCode,
-                check.Latency,
+                check.ResponseTimeInMs,
                 check.Up
             };
-            return await _repository.InsertCheck(values, measurements, check.Timestamp, dataTypes, url);
+            bool success = await _repository.InsertCheck(values, measurements, check.Timestamp, dataTypes, url);
+            if (!success)
+            {
+                _logger.LogError("Failed to insert check for server {ServerId} at {Timestamp}", check.Server.Id, check.Timestamp);
+            }
+            else
+            {
+                _logger.LogInformation("Successfully inserted check for server {ServerId} at {Timestamp}", check.Server.Id, check.Timestamp);
+            }
+            return success;
         }
 
-        public async Task<List<CheckDTO>> ListChecks(string? url, DateTime startDate, DateTime? endDate)
+        public async Task<List<CheckDTO>> ListChecks(Guid serverId, DateTime startDate, DateTime? endDate)
         {
 
+            var server = await _serverRepository.GetByIdAsync(serverId);
+            if (server == null)
+                return new List<CheckDTO>();
+
+            string url = server.URL;
             if (endDate.HasValue == false)
                 endDate = DateTime.Now;
             if (string.IsNullOrEmpty(url))
@@ -66,5 +88,21 @@ namespace NetVigia.BLL.Service
             return (long)(dateTime.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
         }
 
+        public async Task<double> GetUptimePercentageAsync(Guid serverId, TimeSpan period)
+        {
+            var startDate = period <= TimeSpan.Zero
+                ? DateTime.MinValue
+                : DateTime.UtcNow - period;
+
+            var endDate = DateTime.UtcNow;
+
+            var checks = await ListChecks(serverId, startDate, endDate);
+
+            var upChecks = checks.Where(x => x.Up).ToList();
+            var failedChecks = checks.Except(upChecks).ToList();
+            var uptimePercentage = Math.Round((double)upChecks.Count / checks.Count * 100, 2);
+
+            return uptimePercentage;
+        }
     }
 }

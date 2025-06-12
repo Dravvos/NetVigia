@@ -10,14 +10,14 @@ using NetVigia.DTO;
 
 namespace NetVigia.BLL.QueryHandler
 {
-    public class GetTabelaGeralItemByIdHandler : IRequestHandler<GetTabelaGeralItemById, TabelaGeralItemDTO>
+    public class GetTabelaGeralItemByIdQueryHandler : IRequestHandler<GetTabelaGeralItemByIdQuery, TabelaGeralItemDTO>
     {
         private readonly ITabelaGeralItemService _service;
-        public GetTabelaGeralItemByIdHandler(ITabelaGeralItemService service)
+        public GetTabelaGeralItemByIdQueryHandler(ITabelaGeralItemService service)
         {
             _service = service;
         }
-        public async Task<TabelaGeralItemDTO> Handle(GetTabelaGeralItemById request, CancellationToken cancellationToken)
+        public async Task<TabelaGeralItemDTO> Handle(GetTabelaGeralItemByIdQuery request, CancellationToken cancellationToken)
         {
             return await _service.GetByIdAsync(request.id);
         }

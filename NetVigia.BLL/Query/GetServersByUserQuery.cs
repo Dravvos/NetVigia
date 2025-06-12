@@ -8,5 +8,5 @@ using NetVigia.DTO;
 
 namespace NetVigia.BLL.Query
 {
-    public record GetTabelaGeralItensByTabelaGeralId(Guid? tabelaGeralId) : IRequest<List<TabelaGeralItemDTO>>;
+    public record GetServersByUserQuery(Guid userId): IRequest<List<ServerDTO>>;
 }

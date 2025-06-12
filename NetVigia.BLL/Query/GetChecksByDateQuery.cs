@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using NetVigia.Data.TimeSeries;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.Command
+namespace NetVigia.BLL.Query
 {
-    public record AddSiteCheckCommand(Guid serverId) : IRequest<CheckDTO>;
-
+    public record GetChecksByDateQuery(DateTime startDate, DateTime endDate, Guid serverId): IRequest<List<CheckDTO>>;
 }
