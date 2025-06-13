@@ -76,6 +76,7 @@ namespace NetVigia.BLL.Repository
             model.TimeoutInSeconds = dto.TimeoutInSeconds;
             model.ExpectedContent = dto.ExpectedContent;
             model.Name = dto.Name;
+            model.IdTGMonitoringType = dto.IdTGMonitoringType;
             model.ExpectedStatusCode = dto.ExpectedStatusCode;
             model.UsuarioAlteracao = dto.UsuarioAlteracao;
             model.DataAlteracao = dto.DataAlteracao;

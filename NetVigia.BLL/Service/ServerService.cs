@@ -25,6 +25,18 @@ namespace NetVigia.BLL.Service
             {
                 throw new ArgumentOutOfRangeException("O intervalo de checagem tem que ser maior que zero segundos");
             }
+            if(dto.IdTGMonitoringType == Guid.Empty)
+                throw new ArgumentException("Selecione o tipo de monitoramento");
+
+            if(string.IsNullOrEmpty(dto.URL))
+                throw new ArgumentException("A URL não pode ser vazia");
+
+            if (string.IsNullOrEmpty(dto.Name))
+                throw new ArgumentException("O nome do servidor não pode ser vazio");
+
+            if(dto.TimeoutInSeconds < 1)
+                throw new ArgumentOutOfRangeException("O tempo limite de resposta deve ser maior que zero segundos");
+
         }
         public async Task AddAsync(ServerDTO dto)
         {

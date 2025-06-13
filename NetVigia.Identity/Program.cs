@@ -153,9 +153,27 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.UseCors(app =>
+    {
+        app.WithOrigins("http://localhost:5173")
+           .AllowAnyMethod()
+           .AllowAnyHeader()
+           .AllowCredentials();
+    });
+}
+else
+{
+    app.UseCors(app =>
+    {
+        app.WithOrigins("https://www.netvigia.com.br", "https://netvigia.com.br", "https://www.danieloliveira.net.br", "https://danieloliveira.net.br")
+           .AllowAnyMethod()
+           .AllowAnyHeader()
+           .AllowCredentials();
+    });
 }
 
-app.UseRequestLocalization(localizationOptions);
+    app.UseRequestLocalization(localizationOptions);
 
 
 using var scope = app.Services.CreateScope();

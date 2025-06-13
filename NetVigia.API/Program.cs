@@ -17,9 +17,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 
+var mongoCon = Environment.GetEnvironmentVariable("MongoDBConnection");
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .WriteTo.MongoDB(Environment.GetEnvironmentVariable("MongoDBConnection"),"NetVigiaLog")
+    .WriteTo.MongoDB("mongodb://145.223.95.97/NetVigiaLog", "NetVigiaLog")
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);

@@ -18,7 +18,7 @@ namespace NetVigia.API.Controllers
     public class TabelaGeralController : ControllerBase
     {
         private readonly ISender _sender;
-        ILogger
+        
         public TabelaGeralController(ISender sender)
         {
             _sender = sender;

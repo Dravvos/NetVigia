@@ -40,7 +40,15 @@ namespace NetVigia.Data.Models
         public int TimeoutInSeconds { get; set; } = 10;
 
         [Required]
+        [Column("IdTGMonitoringType ")]
+        public Guid IdTGMonitoringType { get; set; }
+
+        [Required]
         [Column("UserId")]
         public Guid UserId { get; set; }
+
+
+        [ForeignKey("IdTGMonitoringType")]
+        public virtual TabelaGeralItemModel? MonitoringType { get; set; }
     }
 }
