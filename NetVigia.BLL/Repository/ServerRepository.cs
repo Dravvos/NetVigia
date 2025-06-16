@@ -37,31 +37,31 @@ namespace NetVigia.BLL.Repository
 
         public async Task<List<ServerDTO>> GetActiveWebsitesAsync()
         {
-            var model = await con.Servers.Where(x => x.Active).ToListAsync();
+            var model = await con.Servers.Where(x => x.Active).Include(x => x.MonitoringType).ToListAsync();
             return Map<List<ServerDTO>>.Convert(model);
         }
 
         public async Task<List<ServerDTO>> GetAllAsync(Guid userId)
         {
-            var model = await con.Servers.Where(x => x.UserId == userId).ToListAsync();
+            var model = await con.Servers.Where(x => x.UserId == userId).Include(x => x.MonitoringType).ToListAsync();
             return Map<List<ServerDTO>>.Convert(model);
         }
 
         public async Task<ServerDTO> GetByIdAsync(Guid id)
         {
-            var model = await con.Servers.FirstOrDefaultAsync(x => x.Id == id);
+            var model = await con.Servers.Include(x => x.MonitoringType).FirstOrDefaultAsync(x => x.Id == id);
             return Map<ServerDTO>.Convert(model);
         }
 
         public async Task<List<ServerDTO>> GetByNomeAsync(Guid userId, string nome)
         {
-            var model = await con.Servers.Where(x => x.UserId == userId && x.URL.ToLower().Contains(nome.ToLower())).ToListAsync();
+            var model = await con.Servers.Where(x => x.UserId == userId && x.URL.ToLower().Contains(nome.ToLower())).Include(x => x.MonitoringType).ToListAsync();
             return Map<List<ServerDTO>>.Convert(model);
         }
 
         public async Task<ServerDTO> GetByUrl(string? url)
         {
-            var model = await con.Servers.FirstOrDefaultAsync(x => x.URL == url);
+            var model = await con.Servers.Include(x => x.MonitoringType).FirstOrDefaultAsync(x => x.URL == url);
             return Map<ServerDTO>.Convert(model);
         }
 

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Identity.Data;
 
 var mongoCon = Environment.GetEnvironmentVariable("MongoDBConnection");
 Log.Logger = new LoggerConfiguration()

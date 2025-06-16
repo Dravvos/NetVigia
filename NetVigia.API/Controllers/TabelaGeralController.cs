@@ -14,11 +14,11 @@ namespace NetVigia.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
+
     public class TabelaGeralController : ControllerBase
     {
         private readonly ISender _sender;
-        
+
         public TabelaGeralController(ISender sender)
         {
             _sender = sender;
@@ -32,8 +32,8 @@ namespace NetVigia.API.Controllers
             {
                 dto.UsuarioInclusao = User.FindFirstValue(JwtRegisteredClaimNames.Name);
                 var cmd = new SaveTabelaGeralCommand(dto);
-                var ret = await _sender.Send(dto);
-                return Ok(ret);
+                await _sender.Send(cmd);
+                return StatusCode(StatusCodes.Status201Created);
 
             }
             catch (ArgumentException ex) { return BadRequest(ex); }
@@ -79,9 +79,9 @@ namespace NetVigia.API.Controllers
         [HttpGet, Authorize]
         public async Task<IActionResult> GetTabelaGeralItemById(Guid id)
         {
-            var cmd = new GetTabelaGeralItemByIdQuery(id);            
+            var cmd = new GetTabelaGeralItemByIdQuery(id);
             var tabelaGeral = await _sender.Send(cmd);
-            if (tabelaGeral == null) 
+            if (tabelaGeral == null)
                 return NotFound();
 
             return Ok(tabelaGeral);
@@ -126,7 +126,7 @@ namespace NetVigia.API.Controllers
                 var cmd = new SaveTabelaGeralItemCommand(dto);
                 await _sender.Send(cmd);
 
-                return StatusCode(201, dto.Id);
+                return StatusCode(StatusCodes.Status201Created, dto.Id);
             }
             catch (ArgumentException ex)
             {
