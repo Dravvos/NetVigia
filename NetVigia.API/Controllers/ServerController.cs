@@ -1,5 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +6,8 @@ using NetVigia.BLL.Command;
 using NetVigia.BLL.Command.Server;
 using NetVigia.BLL.Query;
 using NetVigia.DTO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace NetVigia.API.Controllers
 {
@@ -20,6 +21,26 @@ namespace NetVigia.API.Controllers
         public ServerController(ISender sender)
         {
             _sender = sender;
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            try
+            {
+                var query = new GetServersByIdQuery(id);
+                var server = await _sender.Send(query);
+                if (server == null)
+                    return NotFound();
+
+                return Ok(server);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError,ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.InnerException.Message);
+            }
         }
 
         [HttpGet]
@@ -61,7 +82,7 @@ namespace NetVigia.API.Controllers
             {
                 if (dto == null)
                     return BadRequest("Dados do servidor não podem ser nulos");
-
+                dto.UsuarioInclusao = User.FindFirstValue(JwtRegisteredClaimNames.Name);
                 var cmd = new SaveServerCommand(dto);
                 await _sender.Send(cmd);
 
@@ -86,7 +107,7 @@ namespace NetVigia.API.Controllers
             {
                 if (dto == null || dto.Id != id)
                     return BadRequest("Dados do servidor inválidos");
-
+                dto.UsuarioAlteracao = User.FindFirstValue(JwtRegisteredClaimNames.Name);
                 var cmd = new SaveServerCommand(dto);
                 await _sender.Send(cmd);
                 return NoContent();
@@ -112,7 +133,7 @@ namespace NetVigia.API.Controllers
                     return BadRequest("Id do servidor não pode ser vazio");
 
                 var cmd = new DeleteServerCommand(id);
-                if(await _sender.Send(cmd))
+                if (await _sender.Send(cmd))
                     return NoContent();
                 else
                     return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao excluir o servidor. Verifique se ele está vinculado a outros dados.");

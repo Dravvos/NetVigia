@@ -67,9 +67,6 @@ namespace NetVigia.BLL.Service
             if (string.IsNullOrEmpty(dto.Descricao)) throw new ArgumentNullException(nameof(dto.Descricao), "Descrição do item não pode estar vazia");
             if (dto.TabelaGeralId == Guid.Empty) throw new ArgumentException(nameof(dto.TabelaGeralId), "O item precisa estar atrelado a uma tabela geral");
 
-            var item = await _tabelaGeralItemRepository.GetBySiglaAsync(dto.TabelaGeralId, dto.Sigla);
-            if (item != null) throw new Exception("Já existe uma tabela geral com essa sigla");
-
             dto.DataAlteracao = DateTime.UtcNow.ToUniversalTime();
             dto.Sigla = dto.Sigla.ToUpper();
             await _tabelaGeralItemRepository.UpdateAsync(dto);

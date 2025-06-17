@@ -18,7 +18,7 @@ namespace NetVigia.DTO
         public int TimeoutInSeconds { get; set; } = 10;
         public string? ExpectedContent { get; set; }
         public Guid IdTGMonitoringType { get; set; }
-
+        public Guid UserId { get; set; }
         public TabelaGeralItemDTO? MonitoringType { get; set; }
     }
 }

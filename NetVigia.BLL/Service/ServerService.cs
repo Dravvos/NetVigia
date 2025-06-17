@@ -73,5 +73,10 @@ namespace NetVigia.BLL.Service
 
             await _repository.UpdateAsync(dto);
         }
+
+        public async Task<ServerDTO> GetById(Guid id)
+        {
+            return await _repository.GetByIdAsync(id);
+        }
     }
 }

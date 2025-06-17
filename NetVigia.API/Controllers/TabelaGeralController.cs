@@ -33,7 +33,7 @@ namespace NetVigia.API.Controllers
                 dto.UsuarioInclusao = User.FindFirstValue(JwtRegisteredClaimNames.Name);
                 var cmd = new SaveTabelaGeralCommand(dto);
                 await _sender.Send(cmd);
-                return StatusCode(StatusCodes.Status201Created);
+                return StatusCode(StatusCodes.Status201Created, dto.Id);
 
             }
             catch (ArgumentException ex) { return BadRequest(ex); }
@@ -73,6 +73,27 @@ namespace NetVigia.API.Controllers
                     return StatusCode(500, ex.InnerException.Message);
             }
 
+        }
+
+        [Route("[action]/{nome}")]
+        [HttpGet, Authorize]
+        public async Task<IActionResult> GetTabelaGeralByNome(string nome)
+        {
+            try
+            {
+                var cmd = new GetTabelaGeralByNomeQuery(nome);
+                var tabelaGeral = await _sender.Send(cmd);
+                if (tabelaGeral == null)
+                    return NotFound();
+                return Ok(tabelaGeral);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return StatusCode(500, ex.InnerException.Message);
+
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Route("[action]/{id}")]

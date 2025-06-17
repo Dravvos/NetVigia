@@ -1,6 +1,3 @@
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using NetVigia.API.Extensions;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.BLL.Repository;
 using NetVigia.BLL.Service.Interfaces;
@@ -16,7 +13,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Identity.Data;
+using NetVigia.BLL.Command.TabelaGeral;
+using NetVigia.BLL.Services.Interfaces;
+using NetVigia.BLL.Services;
+using NetVigia.BLL.CommandHandler.TabelaGeral;
 
 var mongoCon = Environment.GetEnvironmentVariable("MongoDBConnection");
 Log.Logger = new LoggerConfiguration()
@@ -35,14 +35,32 @@ builder.Services.AddDbContext<UptimeContext>(options =>
 
 builder.Host.UseSerilog(); // Substitui o logger padrão
 
+builder.Services.AddScoped<ICheckService, HttpCheckService>();
+
+builder.Services.AddScoped<IIoTDBRepository, IoTDBRepository>();
+builder.Services.AddScoped<IIoTDBService, IoTDBService>();
+
+builder.Services.AddScoped<IServerRepository, ServerRepository>();
+builder.Services.AddScoped<IServerService, ServerService>();
+
+builder.Services.AddScoped<ITabelaGeralRepository, TabelaGeralRepository>();
+builder.Services.AddScoped<ITabelaGeralService, TabelaGeralService>();
+
+builder.Services.AddScoped<ITabelaGeralItemRepository, TabelaGeralItemRepository>();
+builder.Services.AddScoped<ITabelaGeralItemService, TabelaGeralItemService>();
+
+builder.Services.AddSingleton<ICheckScheduler, CheckScheduler>();
+builder.Services.AddHostedService<CheckOrchestratorWorker>();
+
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblyContaining<IRequest>());
 
-builder.Services.AddSingleton<ICheckScheduler, CheckScheduler>();
-builder.Services.AddHostedService<CheckOrchestratorWorker>();
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssemblies(typeof(SaveTabelaGeralCommandHandler).Assembly));
+
 
 builder.Services.AddHttpClient("UptimeChecker")
     .ConfigureAdditionalHttpMessageHandlers((action, service) => new SocketsHttpHandler
@@ -83,18 +101,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddControllers();
-
-builder.Services.AddScoped<IIoTDBRepository, IoTDBRepository>();
-builder.Services.AddScoped<IIoTDBService, IoTDBService>();
-
-builder.Services.AddScoped<IServerRepository, ServerRepository>();
-builder.Services.AddScoped<IServerService, ServerService>();
-
-builder.Services.AddScoped<ITabelaGeralRepository, TabelaGeralRepository>();
-builder.Services.AddScoped<ITabelaGeralService, TabelaGeralService>();
-
-builder.Services.AddScoped<ITabelaGeralItemRepository, TabelaGeralItemRepository>();
-builder.Services.AddScoped<ITabelaGeralItemService, TabelaGeralItemService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
