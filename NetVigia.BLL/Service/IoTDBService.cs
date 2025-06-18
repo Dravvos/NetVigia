@@ -134,7 +134,7 @@ namespace NetVigia.BLL.Service
 
             var upChecks = checks.Where(x => x.Up).ToList();
 
-            var averageByTimestamp = upChecks.GroupBy(dp => dp.Timestamp)
+            var averageByTimestamp = upChecks.GroupBy(dp => dp.Timestamp.Date)
                                         .Select(g => new CheckDTO
                                         {
                                             Timestamp = g.Key,

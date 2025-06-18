@@ -20,8 +20,8 @@ using NetVigia.BLL.CommandHandler.TabelaGeral;
 
 var mongoCon = Environment.GetEnvironmentVariable("MongoDBConnection");
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .WriteTo.MongoDB("mongodb://145.223.95.97/NetVigiaLog", "NetVigiaLog")
+    .WriteTo.MongoDB(databaseUrl: "mongodb://145.223.95.97/NetVigiaLog", collectionName:"Logs")
+    .WriteTo.Debug()
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);

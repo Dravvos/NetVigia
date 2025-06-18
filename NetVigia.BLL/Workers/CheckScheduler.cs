@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NetVigia.BLL.Command;
 using NetVigia.BLL.Workers.Interfaces;
@@ -16,18 +17,18 @@ namespace NetVigia.BLL.Workers
     {
 
         private readonly ConcurrentDictionary<Guid, (Timer Timer, int Interval)> _timers = new();
-        private readonly IMediator _mediator;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<CheckScheduler> _logger;
 
-        public CheckScheduler(IMediator mediator, ILogger<CheckScheduler> logger)
+        public CheckScheduler(IServiceProvider serviceProvider, ILogger<CheckScheduler> logger)
         {
-            _mediator = mediator;
+            _serviceProvider = serviceProvider;
             _logger = logger;
         }
 
         public void Dispose()
         {
-            foreach (var (timer, _)in _timers.Values)
+            foreach (var (timer, _) in _timers.Values)
             {
                 timer.Dispose();
             }
@@ -46,14 +47,7 @@ namespace NetVigia.BLL.Workers
 
             var timer = new Timer(async _ =>
             {
-                try
-                {
-                    await _mediator.Send(new AddSiteCheckCommand(website.Id.GetValueOrDefault()));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error executing scheduled check for website {WebsiteId}", website.Id);
-                }
+                await ExecuteCheckAsync(website.Id.GetValueOrDefault());
             },
             null,
             TimeSpan.Zero,
@@ -70,6 +64,21 @@ namespace NetVigia.BLL.Workers
             {
                 timerInfo.Timer.Dispose();
                 _logger.LogInformation("Unscheduled checks for website {WebsiteId}", websiteId);
+            }
+        }
+
+        private async Task ExecuteCheckAsync(Guid websiteId)
+        {
+            // Criar um escopo manualmente para serviços com escopo
+            using var scope = _serviceProvider.CreateScope();
+            try
+            {
+                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                await mediator.Send(new AddSiteCheckCommand(websiteId));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error executing scheduled check for website {WebsiteId}", websiteId);
             }
         }
 
