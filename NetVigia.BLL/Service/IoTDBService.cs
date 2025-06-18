@@ -72,7 +72,7 @@ namespace NetVigia.BLL.Service
 
             string url = server.URL;
             if (endDate.HasValue == false)
-                endDate = DateTime.Now;
+                endDate = DateTime.UtcNow;
             if (string.IsNullOrEmpty(url))
                 return new List<CheckDTO>();
 
@@ -103,6 +103,45 @@ namespace NetVigia.BLL.Service
             var uptimePercentage = Math.Round((double)upChecks.Count / checks.Count * 100, 2);
 
             return uptimePercentage;
+        }
+
+        public async Task<double> GetAverageResponseTime(Guid serverId, TimeSpan period)
+        {
+            var startDate = period <= TimeSpan.Zero
+                ? DateTime.MinValue
+                : DateTime.UtcNow - period;
+
+            var endDate = DateTime.UtcNow;
+
+            var checks = await ListChecks(serverId, startDate, endDate);
+
+            var upChecks = checks.Where(x => x.Up).ToList();
+            var avgResponseTime = upChecks.Average(x => x.ResponseTimeInMs);
+
+            return avgResponseTime;
+        }
+
+        public async Task<List<CheckDTO>> GetAverageResponseTimeByDate(Guid serverId, TimeSpan period)
+        {
+            var ret = new List<CheckDTO>();
+            var startDate = period <= TimeSpan.Zero
+                ? DateTime.MinValue
+                : DateTime.UtcNow - period;
+
+            var endDate = DateTime.UtcNow;
+
+            var checks = await ListChecks(serverId, startDate, endDate);
+
+            var upChecks = checks.Where(x => x.Up).ToList();
+
+            var averageByTimestamp = upChecks.GroupBy(dp => dp.Timestamp)
+                                        .Select(g => new CheckDTO
+                                        {
+                                            Timestamp = g.Key,
+                                            ResponseTimeInMs = g.Average(dp => dp.ResponseTimeInMs)
+                                        }).ToList();
+
+            return averageByTimestamp;
         }
     }
 }

@@ -23,10 +23,7 @@ namespace NetVigia.Data.TimeSeries
             _userService = configs[2].Split('=')[1];
             _passwordService = configs[3].Split('=')[1];
 
-            sessionPool = new SessionPool(_host, _port, _userService, _passwordService, 1000000)
-            {
-                TimeOut = 40000
-            };
+            sessionPool = new SessionPool(_host, _port, _userService, _passwordService, 1000000);
         }
 
     }

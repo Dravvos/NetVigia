@@ -55,6 +55,42 @@ namespace NetVigia.API.Controllers
             }
         }
 
+        [HttpGet("responseTime/{serverId}")]
+        public async Task<IActionResult> GetResponseTime(Guid serverId, [FromQuery] int hours = 24)
+        {
+            try
+            {
+                var period = TimeSpan.FromHours(hours);
+                var cmd = new GetAverageResponseTimeQuery(serverId, period);
+                var responseTime = await _sender.Send(cmd);
+                return Ok(responseTime);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
+        [HttpGet("responseTimeByDate/{serverId}")]
+        public async Task<IActionResult> GetResponseTimeByDate(Guid serverId, [FromQuery] int hours = 24)
+        {
+            try
+            {
+                var period = TimeSpan.FromHours(hours);
+                var cmd = new GetAverageResponseTimeByDateQuery(serverId,period);
+                var chartInfo = await _sender.Send(cmd);
+                return Ok(chartInfo);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
         [HttpPost("perform/{serverId:guid}")]
         public async Task<IActionResult> PerformCheck(Guid serverId)
         {

@@ -13,6 +13,11 @@ namespace NetVigia.BLL.QueryHandler
     {
         private readonly IIoTDBService _ioTDBService;
 
+        public GetUptimePercentageQueryHandler(IIoTDBService ioTDBService)
+        {
+            _ioTDBService = ioTDBService;
+        }
+
         public Task<double> Handle(GetUptimePercentageQuery request, CancellationToken cancellationToken)
         {
             if (request.period <= TimeSpan.Zero)
