@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NetVigia.DTO;
 using NetVigia.BLL.Services.Interfaces;
+using System.Net.NetworkInformation;
 
 namespace NetVigia.BLL.Services
 {
@@ -32,15 +33,101 @@ namespace NetVigia.BLL.Services
             {
                 var sw = Stopwatch.StartNew();
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(website.TimeoutInSeconds));
-                var request = new HttpRequestMessage(HttpMethod.Head, website.URL);
 
-                var response = await _httpClient.SendAsync(request, cts.Token);
+                if (website.MonitoringType.Sigla == "ICMP")
+                {
+                    var pingClient = new Ping();
+                    var res = await pingClient.SendPingAsync(website.URL.Replace("https://",""));
+                    sw.Stop();
+                    switch (res.Status)
+                    {
+                        case IPStatus.Unknown:
+                            result.StatusCode = 500;
+                            result.Up = false;
+                            break;
+                        case IPStatus.Success:
+                            result.StatusCode = 200;
+                            result.Up = true;
+                            break;
+                        case IPStatus.DestinationNetworkUnreachable:
+                            result.StatusCode = 523;
+                            result.Up = false;
+                            break;
+                        case IPStatus.DestinationHostUnreachable:
+                            result.StatusCode = 523;
+                            result.Up = false;
+                            break;
+                        case IPStatus.DestinationProhibited:
+                            result.StatusCode = 403;
+                            result.Up = true;
+                            break;
+                        case IPStatus.DestinationPortUnreachable:
+                            result.StatusCode = 523;
+                            result.Up = false;
+                            break;
+                        case IPStatus.TimedOut:
+                            result.StatusCode = 522;
+                            result.Up = false;
+                            break;
+                        case IPStatus.BadDestination:
+                            result.StatusCode = 400;
+                            result.Up = false;
+                            break;
+                        case IPStatus.DestinationUnreachable:
+                            result.StatusCode = 523;
+                            result.Up = false;
+                            break;
+                        default:
+                            result.StatusCode = 500;
+                            result.Up = false;
+                            break;
+                    }
+                }
+                else if (website.MonitoringType.Sigla == "HTTP")
+                {
+                    var httpMethod = website.HTTPMethod.Sigla;
+                    var request = new HttpRequestMessage();                    
+                    request.RequestUri = new Uri(website.URL);
 
-                sw.Stop();
+                    switch (httpMethod)
+                    {
+                        case "GET":
+                            request.Method = HttpMethod.Get;
+                            break;
+                        case "POST":
+                            request.Method = HttpMethod.Post;                            
+                            break;
+                        case "PUT":
+                            request.Method = HttpMethod.Put;
+                            break;
+                        case "DELETE":
+                            request.Method = HttpMethod.Delete;
+                            break;
+                        case "HEAD":
+                            request.Method = HttpMethod.Head;
+                            break;
+                        case "PATCH":
+                            request.Method = HttpMethod.Patch;
+                            break;
+                        case "OPTIONS":
+                            request.Method = HttpMethod.Options;
+                            break;
+                        default:
+                            request.Method = HttpMethod.Head;
+                            break;
+                    }
+                    var response = await _httpClient.SendAsync(request, cts.Token);
+                    sw.Stop();
+                    result.StatusCode = (int)response.StatusCode;
+                    result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
+                }
+                else
+                {
+
+                }
 
                 result.ResponseTimeInMs = sw.ElapsedMilliseconds;
-                result.StatusCode = (int)response.StatusCode;
-                result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
+                
                 if (!string.IsNullOrEmpty(website.ExpectedContent) && result.Up)
                 {
                     // Se precisar verificar conteúdo, fazemos uma requisição GET

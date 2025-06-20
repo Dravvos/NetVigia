@@ -143,5 +143,28 @@ namespace NetVigia.BLL.Service
 
             return averageByTimestamp;
         }
+
+        public async Task<List<CheckDTO>> ListFailedChecks(Guid serverId, DateTime startDate, DateTime? endDate)
+        {
+
+            var server = await _serverRepository.GetByIdAsync(serverId);
+            if (server == null)
+                return new List<CheckDTO>();
+
+            string url = server.URL;
+            if (endDate.HasValue == false)
+                endDate = DateTime.UtcNow;
+            if (string.IsNullOrEmpty(url))
+                return new List<CheckDTO>();
+
+            var sanitizedUrl = SanitizeSiteUrl(url);
+            var query = $"SELECT * FROM root.netvigia.{sanitizedUrl} " +
+                       $"WHERE time >= {ConvertToUnixTimestamp(startDate)} AND time <= {ConvertToUnixTimestamp(endDate.Value)}";
+
+            var checks = await _repository.ListChecks(query, url);
+
+            return checks.Where(x => x.Up == false).ToList();
+        }
+
     }
 }

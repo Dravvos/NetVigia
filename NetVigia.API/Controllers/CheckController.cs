@@ -27,6 +27,9 @@ namespace NetVigia.API.Controllers
             {
                 var cmd = new GetChecksByDateQuery(startDate, endDate, serverId);
                 var checks = await _sender.Send(cmd);
+                if (checks == null || checks.Any() == false)
+                    return NotFound();
+
                 return Ok(checks);
             }
             catch (Exception ex)
@@ -36,6 +39,27 @@ namespace NetVigia.API.Controllers
                 return StatusCode(500, ex.InnerException.Message);
             }
         }
+
+        [HttpGet("failed/{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetFailedChecks(Guid serverId, DateTime startDate, DateTime endDate, [FromQuery] int count = 20)
+        {
+            try
+            {
+                var cmd = new GetFailedChecksByDateQuery(serverId, startDate, endDate);
+                var checks = await _sender.Send(cmd);
+                if (checks == null || checks.Any() == false)
+                    return NotFound();
+
+                return Ok(checks);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
 
         [HttpGet("uptime/{serverId}")]
         public async Task<IActionResult> GetUptimePercentage(Guid serverId, [FromQuery] int hours = 24)
@@ -79,8 +103,11 @@ namespace NetVigia.API.Controllers
             try
             {
                 var period = TimeSpan.FromHours(hours);
-                var cmd = new GetAverageResponseTimeByDateQuery(serverId,period);
+                var cmd = new GetAverageResponseTimeByDateQuery(serverId, period);
                 var chartInfo = await _sender.Send(cmd);
+                if (chartInfo == null || chartInfo.Any() == false)
+                    return NotFound();
+
                 return Ok(chartInfo);
             }
             catch (Exception ex)
@@ -98,8 +125,10 @@ namespace NetVigia.API.Controllers
             {
                 var cmd = new AddSiteCheckCommand(serverId);
                 var check = await _sender.Send(cmd);
+
                 if (check == null)
                     return NotFound("Check could not be performed.");
+
                 return Ok(check);
             }
             catch (ArgumentException ex)

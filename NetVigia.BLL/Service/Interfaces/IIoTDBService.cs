@@ -12,6 +12,7 @@ namespace NetVigia.BLL.Service.Interfaces
         Task<double> GetUptimePercentageAsync(Guid serverId, TimeSpan period);
         Task<bool> Insert(CheckDTO check);
         Task<List<CheckDTO>> ListChecks(Guid serverId, DateTime startDate, DateTime? endDate);
+        Task<List<CheckDTO>> ListFailedChecks(Guid serverId, DateTime startDate, DateTime? endDate);
         Task<double> GetAverageResponseTime(Guid serverId, TimeSpan period);
         Task<List<CheckDTO>> GetAverageResponseTimeByDate(Guid serverId, TimeSpan period);
     }

@@ -1,39 +1,67 @@
-using NetVigia.BLL.Repository.Interfaces;
-using NetVigia.BLL.Repository;
-using NetVigia.BLL.Service.Interfaces;
-using NetVigia.BLL.Service;
-using Serilog;
 using MediatR;
-using NetVigia.Data;
-using Microsoft.EntityFrameworkCore;
-using NetVigia.BLL.Workers.Interfaces;
-using NetVigia.BLL.Workers;
-using NetVigia.Workers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
-using NetVigia.BLL.Command.TabelaGeral;
-using NetVigia.BLL.Services.Interfaces;
-using NetVigia.BLL.Services;
+using MongoDB.Driver;
 using NetVigia.BLL.CommandHandler.TabelaGeral;
+using NetVigia.BLL.Repository;
+using NetVigia.BLL.Repository.Interfaces;
+using NetVigia.BLL.Service;
+using NetVigia.BLL.Service.Interfaces;
+using NetVigia.BLL.Services;
+using NetVigia.BLL.Services.Interfaces;
+using NetVigia.BLL.Workers;
+using NetVigia.BLL.Workers.Interfaces;
+using NetVigia.Data;
+using NetVigia.Workers;
+using Serilog;
+using Serilog.Events;
+using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
-var mongoCon = Environment.GetEnvironmentVariable("MongoDBConnection");
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.MongoDB(databaseUrl: "mongodb://145.223.95.97/NetVigiaLog", collectionName:"Logs")
+var mongoConnectionString = Environment.GetEnvironmentVariable("MongoDBConnection");
+var settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
+
+var caCert = new X509Certificate2(@"C:\Users\Daniel\mongodb-ca.crt");
+var clientCert = new X509Certificate2(@"C:\Users\Daniel\mongodb-client.pfx", "YqY,&soTB_fQ!r5#",
+     X509KeyStorageFlags.MachineKeySet |
+X509KeyStorageFlags.PersistKeySet |
+X509KeyStorageFlags.Exportable);
+
+settings.SslSettings = new SslSettings
+{
+    ClientCertificates = new List<X509Certificate> { clientCert },
+    ServerCertificateValidationCallback = (sender, cert, chain, errors) => true
+};
+
+var client = new MongoClient(settings);
+
+var database = client.GetDatabase("NetVigiaLogs");
+
+var logger = new LoggerConfiguration()
+     .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
     .WriteTo.Debug()
+    .WriteTo.Console()
+    .WriteTo.MongoDBCapped(database, collectionName: "Logs", cappedMaxSizeMb: 100, cappedMaxDocuments: 50000)
     .CreateLogger();
+
+Log.Logger = logger;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddDbContext<UptimeContext>(options =>
 {
     var connectionString = Environment.GetEnvironmentVariable("NetVigiaCon");
     options.UseNpgsql(connectionString);
 });
 
-builder.Host.UseSerilog(); // Substitui o logger padrão
+builder.Logging.ClearProviders();
+
+builder.Host.UseSerilog(logger); // Substitui o logger padrão
 
 builder.Services.AddScoped<ICheckService, HttpCheckService>();
 

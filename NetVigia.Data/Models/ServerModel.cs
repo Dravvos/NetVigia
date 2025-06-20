@@ -43,6 +43,9 @@ namespace NetVigia.Data.Models
         [Column("IdTGMonitoringType ")]
         public Guid IdTGMonitoringType { get; set; }
 
+        [Column("IdTGHTTPMethod")]
+        public Guid? IdTGHTTPMethod { get; set; }
+
         [Required]
         [Column("UserId")]
         public Guid UserId { get; set; }
@@ -50,5 +53,8 @@ namespace NetVigia.Data.Models
 
         [ForeignKey("IdTGMonitoringType")]
         public virtual TabelaGeralItemModel? MonitoringType { get; set; }
+
+        [ForeignKey("IdTGHTTPMethod")]
+        public virtual TabelaGeralItemModel? HTTPMethod { get; set; }
     }
 }

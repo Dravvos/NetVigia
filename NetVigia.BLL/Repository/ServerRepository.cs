@@ -77,6 +77,7 @@ namespace NetVigia.BLL.Repository
             model.ExpectedContent = dto.ExpectedContent;
             model.Name = dto.Name;
             model.IdTGMonitoringType = dto.IdTGMonitoringType;
+            model.IdTGHTTPMethod = dto.IdTGHTTPMethod;
             model.ExpectedStatusCode = dto.ExpectedStatusCode;
             model.UsuarioAlteracao = dto.UsuarioAlteracao;
             model.DataAlteracao = dto.DataAlteracao;
