@@ -8,10 +8,10 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NetVigia.BLL.Command;
-using NetVigia.BLL.Workers.Interfaces;
 using NetVigia.DTO;
+using NetVigia.Workers.Workers.Interfaces;
 
-namespace NetVigia.BLL.Workers
+namespace NetVigia.Workers.Workers
 {
     public class CheckScheduler : ICheckScheduler, IDisposable
     {

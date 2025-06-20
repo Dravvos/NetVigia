@@ -19,6 +19,7 @@ namespace NetVigia.DTO
         public string? ExpectedContent { get; set; }
         public Guid IdTGMonitoringType { get; set; }
         public Guid? IdTGHTTPMethod { get; set; }
+        public int Port { get; set; }
         public Guid UserId { get; set; }
         public TabelaGeralItemDTO? MonitoringType { get; set; }
         public TabelaGeralItemDTO? HTTPMethod { get; set; }

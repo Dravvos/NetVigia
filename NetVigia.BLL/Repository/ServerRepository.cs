@@ -79,6 +79,7 @@ namespace NetVigia.BLL.Repository
             model.IdTGMonitoringType = dto.IdTGMonitoringType;
             model.IdTGHTTPMethod = dto.IdTGHTTPMethod;
             model.ExpectedStatusCode = dto.ExpectedStatusCode;
+            model.Port = dto.Port;
             model.UsuarioAlteracao = dto.UsuarioAlteracao;
             model.DataAlteracao = dto.DataAlteracao;
 

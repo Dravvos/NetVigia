@@ -11,45 +11,12 @@ using NetVigia.BLL.Service;
 using NetVigia.BLL.Service.Interfaces;
 using NetVigia.BLL.Services;
 using NetVigia.BLL.Services.Interfaces;
-using NetVigia.BLL.Workers;
-using NetVigia.BLL.Workers.Interfaces;
 using NetVigia.Data;
-using NetVigia.Workers;
 using Serilog;
 using Serilog.Events;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-
-var mongoConnectionString = Environment.GetEnvironmentVariable("MongoDBConnection");
-var settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
-
-var caCert = new X509Certificate2(@"C:\Users\Daniel\mongodb-ca.crt");
-var clientCert = new X509Certificate2(@"C:\Users\Daniel\mongodb-client.pfx", "YqY,&soTB_fQ!r5#",
-     X509KeyStorageFlags.MachineKeySet |
-X509KeyStorageFlags.PersistKeySet |
-X509KeyStorageFlags.Exportable);
-
-settings.SslSettings = new SslSettings
-{
-    ClientCertificates = new List<X509Certificate> { clientCert },
-    ServerCertificateValidationCallback = (sender, cert, chain, errors) => true
-};
-
-var client = new MongoClient(settings);
-
-var database = client.GetDatabase("NetVigiaLogs");
-
-var logger = new LoggerConfiguration()
-     .MinimumLevel.Debug()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-    .Enrich.FromLogContext()
-    .WriteTo.Debug()
-    .WriteTo.Console()
-    .WriteTo.MongoDBCapped(database, collectionName: "Logs", cappedMaxSizeMb: 100, cappedMaxDocuments: 50000)
-    .CreateLogger();
-
-Log.Logger = logger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,12 +25,14 @@ builder.Services.AddDbContext<UptimeContext>(options =>
     var connectionString = Environment.GetEnvironmentVariable("NetVigiaCon");
     options.UseNpgsql(connectionString);
 });
-
-builder.Logging.ClearProviders();
-
-builder.Host.UseSerilog(logger); // Substitui o logger padrão
-
 builder.Services.AddScoped<ICheckService, HttpCheckService>();
+
+builder.Services.AddHttpClient("UptimeChecker")
+    .ConfigureAdditionalHttpMessageHandlers((action, service) => new SocketsHttpHandler
+    {
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+    }).SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
 builder.Services.AddScoped<IIoTDBRepository, IoTDBRepository>();
 builder.Services.AddScoped<IIoTDBService, IoTDBService>();
@@ -77,9 +46,6 @@ builder.Services.AddScoped<ITabelaGeralService, TabelaGeralService>();
 builder.Services.AddScoped<ITabelaGeralItemRepository, TabelaGeralItemRepository>();
 builder.Services.AddScoped<ITabelaGeralItemService, TabelaGeralItemService>();
 
-builder.Services.AddSingleton<ICheckScheduler, CheckScheduler>();
-builder.Services.AddHostedService<CheckOrchestratorWorker>();
-
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
@@ -88,14 +54,6 @@ builder.Services.AddMediatR(cfg =>
 
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(typeof(SaveTabelaGeralCommandHandler).Assembly));
-
-
-builder.Services.AddHttpClient("UptimeChecker")
-    .ConfigureAdditionalHttpMessageHandlers((action, service) => new SocketsHttpHandler
-    {
-        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
-        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-    }).SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
 var jwtSecret = builder.Configuration.GetSection("JwtSettings:Secret");
 

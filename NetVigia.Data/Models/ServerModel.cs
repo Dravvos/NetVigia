@@ -46,6 +46,9 @@ namespace NetVigia.Data.Models
         [Column("IdTGHTTPMethod")]
         public Guid? IdTGHTTPMethod { get; set; }
 
+        [Column("Port")]
+        public int Port { get; set; }
+
         [Required]
         [Column("UserId")]
         public Guid UserId { get; set; }

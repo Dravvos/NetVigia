@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.Workers.Interfaces
+namespace NetVigia.Workers.Workers.Interfaces
 {
     public interface ICheckScheduler
     {

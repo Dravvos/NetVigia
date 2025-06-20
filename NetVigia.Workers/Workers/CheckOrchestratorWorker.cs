@@ -10,10 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NetVigia.BLL.Repository.Interfaces;
-using NetVigia.BLL.Workers.Interfaces;
+using NetVigia.Workers.Workers.Interfaces;
 using NetVigia.DTO;
 
-namespace NetVigia.Workers
+namespace NetVigia.Workers.Workers
 {
     public class CheckOrchestratorWorker : BackgroundService
     {

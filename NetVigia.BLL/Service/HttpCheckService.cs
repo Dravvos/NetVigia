@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NetVigia.DTO;
 using NetVigia.BLL.Services.Interfaces;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace NetVigia.BLL.Services
 {
@@ -31,13 +32,14 @@ namespace NetVigia.BLL.Services
             };
             try
             {
-                var sw = Stopwatch.StartNew();
+                
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(website.TimeoutInSeconds));
-
+                var sw = new Stopwatch();
                 if (website.MonitoringType.Sigla == "ICMP")
                 {
                     var pingClient = new Ping();
-                    var res = await pingClient.SendPingAsync(website.URL.Replace("https://",""));
+                    sw.Start();
+                    var res = await pingClient.SendPingAsync(website.URL.Replace("https://","").Replace("http://",""));
                     sw.Stop();
                     switch (res.Status)
                     {
@@ -116,6 +118,7 @@ namespace NetVigia.BLL.Services
                             request.Method = HttpMethod.Head;
                             break;
                     }
+                    sw.Start();
                     var response = await _httpClient.SendAsync(request, cts.Token);
                     sw.Stop();
                     result.StatusCode = (int)response.StatusCode;
@@ -123,6 +126,18 @@ namespace NetVigia.BLL.Services
                 }
                 else
                 {
+                    using var client = new TcpClient();
+                    var connectTask = client.ConnectAsync(website.URL, 80);
+                    if(await Task.WhenAny(connectTask, Task.Delay(website.TimeoutInSeconds)) == connectTask)
+                    {
+                        result.Up = client.Connected;
+                        result.StatusCode = 200;
+                    }
+                    else
+                    {
+                        result.Up = false;
+                        result.StatusCode = 408;
+                    }
 
                 }
 
