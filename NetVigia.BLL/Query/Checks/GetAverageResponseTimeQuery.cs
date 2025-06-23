@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetVigia.BLL.Query
+namespace NetVigia.BLL.Query.Checks
 {
     public record GetAverageResponseTimeQuery(Guid serverId, TimeSpan period):IRequest<double>;
 }

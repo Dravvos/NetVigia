@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MediatR;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.Query
+namespace NetVigia.BLL.Query.Checks
 {
     public record GetChecksByDateQuery(DateTime startDate, DateTime endDate, Guid serverId): IRequest<List<CheckDTO>>;
 }

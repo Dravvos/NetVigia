@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using NetVigia.BLL.Query;
+using NetVigia.BLL.Query.Checks;
 using NetVigia.BLL.Service.Interfaces;
 
 namespace NetVigia.BLL.QueryHandler

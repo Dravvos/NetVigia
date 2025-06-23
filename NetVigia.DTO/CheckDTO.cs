@@ -14,7 +14,7 @@ namespace NetVigia.DTO
         public float ResponseTimeInMs { get; set; }
         public DateTime Timestamp { get; set; }
         public string? ErrorMessage { get; set; }
-
+        public int Count { get; set; }
         public ServerDTO? Server { get; set; }
     }
 

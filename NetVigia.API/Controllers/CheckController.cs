@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NetVigia.BLL.Command;
-using NetVigia.BLL.Query;
+using NetVigia.BLL.Query.Checks;
 using NetVigia.DTO;
 
 namespace NetVigia.API.Controllers
@@ -42,6 +42,26 @@ namespace NetVigia.API.Controllers
 
         [HttpGet("failed/{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
         public async Task<IActionResult> GetFailedChecks(Guid serverId, DateTime startDate, DateTime endDate, [FromQuery] int count = 20)
+        {
+            try
+            {
+                var cmd = new GetFailedChecksQuery(serverId, startDate, endDate);
+                var checks = await _sender.Send(cmd);
+                if (checks == null || checks.Any() == false)
+                    return NotFound();
+
+                return Ok(checks);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
+        [HttpGet("failedByDate/{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetFailedChecksByDate(Guid serverId, DateTime startDate, DateTime endDate, [FromQuery] int count = 20)
         {
             try
             {

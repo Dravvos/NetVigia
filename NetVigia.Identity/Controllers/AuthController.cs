@@ -63,6 +63,8 @@ namespace NetVigia.Identity.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDTO dto)
         {
+            if (User.Identity.IsAuthenticated)
+                return Ok();
 
             var user = await _userManager.FindByNameAsync(dto.Email);
             if (user == null)

@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using NetVigia.BLL.Query;
+using NetVigia.BLL.Query.Checks;
 using NetVigia.BLL.Service.Interfaces;
 using NetVigia.DTO;
 using System;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetVigia.BLL.QueryHandler
+namespace NetVigia.BLL.QueryHandler.Checks
 {
     public class GetAverageResponseTimeByDateQueryHandler : IRequestHandler<GetAverageResponseTimeByDateQuery, List<CheckDTO>>
     {
