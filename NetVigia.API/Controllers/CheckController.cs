@@ -81,13 +81,12 @@ namespace NetVigia.API.Controllers
         }
 
 
-        [HttpGet("uptime/{serverId}")]
-        public async Task<IActionResult> GetUptimePercentage(Guid serverId, [FromQuery] int hours = 24)
+        [HttpGet("uptime/{serverId}/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetUptimePercentage(Guid serverId, DateTime startDate, DateTime? endDate)
         {
             try
             {
-                var period = TimeSpan.FromHours(hours);
-                var cmd = new GetUptimePercentageQuery(serverId, period);
+                var cmd = new GetUptimePercentageQuery(serverId, startDate,endDate);
                 var uptimePercentage = await _sender.Send(cmd);
                 return Ok(uptimePercentage);
             }
@@ -99,13 +98,12 @@ namespace NetVigia.API.Controllers
             }
         }
 
-        [HttpGet("responseTime/{serverId}")]
-        public async Task<IActionResult> GetResponseTime(Guid serverId, [FromQuery] int hours = 24)
+        [HttpGet("responseTime/{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetResponseTime(Guid serverId, DateTime startDate, DateTime? endDate)
         {
             try
             {
-                var period = TimeSpan.FromHours(hours);
-                var cmd = new GetAverageResponseTimeQuery(serverId, period);
+                var cmd = new GetAverageResponseTimeQuery(serverId, startDate, endDate);
                 var responseTime = await _sender.Send(cmd);
                 return Ok(responseTime);
             }
@@ -117,13 +115,12 @@ namespace NetVigia.API.Controllers
             }
         }
 
-        [HttpGet("responseTimeByDate/{serverId}")]
-        public async Task<IActionResult> GetResponseTimeByDate(Guid serverId, [FromQuery] int hours = 24)
+        [HttpGet("responseTimeByDate/{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetResponseTimeByDate(Guid serverId, DateTime startDate, DateTime endDate)
         {
             try
             {
-                var period = TimeSpan.FromHours(hours);
-                var cmd = new GetAverageResponseTimeByDateQuery(serverId, period);
+                var cmd = new GetAverageResponseTimeByDateQuery(serverId, startDate, endDate);
                 var chartInfo = await _sender.Send(cmd);
                 if (chartInfo == null || chartInfo.Any() == false)
                     return NotFound();

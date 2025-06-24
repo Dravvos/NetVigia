@@ -20,7 +20,7 @@ namespace NetVigia.BLL.QueryHandler.Checks
 
         public async Task<double> Handle(GetAverageResponseTimeQuery request, CancellationToken cancellationToken)
         {
-            return await _service.GetAverageResponseTime(request.serverId, request.period);
+            return await _service.GetAverageResponseTime(request.serverId, request.startDate, request.endDate);
         }
     }
 }

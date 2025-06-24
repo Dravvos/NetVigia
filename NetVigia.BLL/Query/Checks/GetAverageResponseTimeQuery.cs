@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 
 namespace NetVigia.BLL.Query.Checks
 {
-    public record GetAverageResponseTimeQuery(Guid serverId, TimeSpan period):IRequest<double>;
+    public record GetAverageResponseTimeQuery(Guid serverId, DateTime startDate, DateTime? endDate):IRequest<double>;
 }

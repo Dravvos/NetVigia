@@ -20,9 +20,7 @@ namespace NetVigia.BLL.QueryHandler
 
         public Task<double> Handle(GetUptimePercentageQuery request, CancellationToken cancellationToken)
         {
-            if (request.period <= TimeSpan.Zero)
-                throw new ArgumentException("Period must be greater than zero.", nameof(request.period));
-            return _ioTDBService.GetUptimePercentageAsync(request.serverId, request.period);
+            return _ioTDBService.GetUptimePercentageAsync(request.serverId, request.startDate, request.endDate);
         }
     }
 }

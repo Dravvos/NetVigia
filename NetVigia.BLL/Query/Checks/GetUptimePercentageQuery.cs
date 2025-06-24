@@ -7,5 +7,5 @@ using MediatR;
 
 namespace NetVigia.BLL.Query.Checks
 {
-    public record GetUptimePercentageQuery(Guid serverId, TimeSpan period) : IRequest<double>;
+    public record GetUptimePercentageQuery(Guid serverId, DateTime startDate, DateTime? endDate) : IRequest<double>;
 }

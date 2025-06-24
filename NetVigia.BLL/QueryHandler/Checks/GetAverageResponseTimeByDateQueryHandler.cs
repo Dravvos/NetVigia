@@ -21,7 +21,7 @@ namespace NetVigia.BLL.QueryHandler.Checks
 
         public async Task<List<CheckDTO>> Handle(GetAverageResponseTimeByDateQuery request, CancellationToken cancellationToken)
         {
-            return await _service.GetAverageResponseTimeByDate(request.serverId, request.period);
+            return await _service.GetAverageResponseTimeByDate(request.serverId, request.startDate,request.endDate);
         }
     }
 }

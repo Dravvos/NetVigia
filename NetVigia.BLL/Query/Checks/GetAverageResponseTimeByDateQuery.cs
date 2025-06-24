@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 
 namespace NetVigia.BLL.Query.Checks
 {
-    public record GetAverageResponseTimeByDateQuery(Guid serverId, TimeSpan period) : IRequest<List<CheckDTO>>;
+    public record GetAverageResponseTimeByDateQuery(Guid serverId, DateTime startDate, DateTime? endDate) : IRequest<List<CheckDTO>>;
 
 }
