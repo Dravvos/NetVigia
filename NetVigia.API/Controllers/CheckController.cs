@@ -21,7 +21,7 @@ namespace NetVigia.API.Controllers
         }
 
         [HttpGet("{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
-        public async Task<IActionResult> GetChecks(Guid serverId, DateTime startDate, DateTime endDate, [FromQuery] int count = 20)
+        public async Task<IActionResult> GetChecks(Guid serverId, DateTime startDate, DateTime endDate)
         {
             try
             {
