@@ -7,7 +7,7 @@ using MediatR;
 using NetVigia.BLL.Query.Checks;
 using NetVigia.BLL.Service.Interfaces;
 
-namespace NetVigia.BLL.QueryHandler
+namespace NetVigia.BLL.QueryHandler.Checks
 {
     public class GetUptimePercentageQueryHandler : IRequestHandler<GetUptimePercentageQuery, double>
     {

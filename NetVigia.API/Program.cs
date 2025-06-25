@@ -34,6 +34,9 @@ builder.Services.AddHttpClient("UptimeChecker")
         PooledConnectionLifetime = TimeSpan.FromMinutes(5),
     }).SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
+builder.Services.AddScoped<IIntegrationRepository, IntegrationRepository>();
+builder.Services.AddScoped<IIntegrationService, IntegrationService>();
+
 builder.Services.AddScoped<IIoTDBRepository, IoTDBRepository>();
 builder.Services.AddScoped<IIoTDBService, IoTDBService>();
 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetVigia.BLL.Query
+namespace NetVigia.BLL.Query.TabelaGeral
 {
     public record GetTabelaGeralByNomeQuery(string nome) : IRequest<TabelaGeralDTO>;
 }

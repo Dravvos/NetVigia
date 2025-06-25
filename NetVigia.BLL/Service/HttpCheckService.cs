@@ -123,6 +123,7 @@ namespace NetVigia.BLL.Services
                     sw.Stop();
                     result.StatusCode = (int)response.StatusCode;
                     result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
+                    
                 }
                 else
                 {

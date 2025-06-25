@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MediatR;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.Query
+namespace NetVigia.BLL.Command.Integration
 {
-    public record GetTabelaGeralItensByTabelaGeralIdQuery(Guid? tabelaGeralId) : IRequest<List<TabelaGeralItemDTO>>;
+    public record SaveIntegrationCommand(IntegrationDTO dto) : IRequest;
 }

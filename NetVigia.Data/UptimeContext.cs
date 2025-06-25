@@ -19,7 +19,7 @@ namespace NetVigia.Data
             optionsBuilder.UseNpgsql(con);
         }
 
-
+        public DbSet<IntegrationUserModel> Integrations { get; set; }
         public DbSet<ServerModel> Servers { get; set; }
         public DbSet<TabelaGeralModel> TabelaGeral { get; set; }
         public DbSet<TabelaGeralItemModel> TabelaGeralItem { get; set; }

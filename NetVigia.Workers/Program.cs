@@ -62,6 +62,9 @@ builder.Services.AddScoped<ICheckService, HttpCheckService>();
 builder.Services.AddSingleton<ICheckScheduler, CheckScheduler>();
 builder.Services.AddHostedService<CheckOrchestratorWorker>();
 
+builder.Services.AddScoped<IIntegrationRepository, IntegrationRepository>();
+builder.Services.AddScoped<IIntegrationService, IntegrationService>();
+
 builder.Services.AddScoped<IIoTDBRepository, IoTDBRepository>();
 builder.Services.AddScoped<IIoTDBService, IoTDBService>();
 

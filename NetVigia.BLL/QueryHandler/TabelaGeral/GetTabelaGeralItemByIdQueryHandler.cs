@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using NetVigia.BLL.Query;
+using NetVigia.BLL.Query.TabelaGeral;
 using NetVigia.BLL.Service.Interfaces;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.QueryHandler
+namespace NetVigia.BLL.QueryHandler.TabelaGeral
 {
     public class GetTabelaGeralItemByIdQueryHandler : IRequestHandler<GetTabelaGeralItemByIdQuery, TabelaGeralItemDTO>
     {

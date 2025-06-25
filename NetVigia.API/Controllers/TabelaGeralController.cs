@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NetVigia.API.Utils;
 using NetVigia.BLL.Command.TabelaGeral;
-using NetVigia.BLL.Query;
+using NetVigia.BLL.Query.TabelaGeral;
 using NetVigia.DTO;
 
 namespace NetVigia.API.Controllers

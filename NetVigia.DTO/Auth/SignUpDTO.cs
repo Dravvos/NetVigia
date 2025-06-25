@@ -12,5 +12,7 @@ namespace NetVigia.DTO.Auth
         public string? Nome { get; set; }
         public string? Email { get; set; }
         public string? Sobrenome { get; set; }
+
+        public string? PhoneNumber { get; set; }
     }
 }
