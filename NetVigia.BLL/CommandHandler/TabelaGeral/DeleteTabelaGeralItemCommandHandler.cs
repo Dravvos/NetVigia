@@ -9,24 +9,16 @@ using NetVigia.BLL.Service.Interfaces;
 
 namespace NetVigia.BLL.CommandHandler.TabelaGeral
 {
-    public class DeleteTabelaGeralItemCommandHandler : IRequestHandler<DeleteTabelaGeralItemCommand, bool>
+    public class DeleteTabelaGeralItemCommandHandler : IRequestHandler<DeleteTabelaGeralItemCommand>
     {
         private readonly ITabelaGeralItemService _service;
         public DeleteTabelaGeralItemCommandHandler(ITabelaGeralItemService service)
         {
             _service = service;
         }
-        public async Task<bool> Handle(DeleteTabelaGeralItemCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteTabelaGeralItemCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                await _service.DeleteAsync(request.id);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            await _service.DeleteAsync(request.id);
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MediatR;
 
-namespace NetVigia.BLL.Command.Integration
+namespace NetVigia.BLL.Command.Maintenance
 {
-    public record DeleteIntegrationCommand(Guid id) : IRequest;
+    public record DeleteMaintenanceCommand(Guid id):IRequest;
 }

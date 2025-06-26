@@ -13,5 +13,6 @@ namespace NetVigia.BLL.Service.Interfaces
         Task CreateAsync(IntegrationDTO dto);
         Task UpdateAsync(IntegrationDTO dto);
         Task DeleteAsync(Guid id);
+        Task SendNotificationAsync(string endpoint, object data);
     }
 }

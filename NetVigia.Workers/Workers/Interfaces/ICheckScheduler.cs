@@ -13,5 +13,6 @@ namespace NetVigia.Workers.Workers.Interfaces
         void ScheduleWebsiteCheck(ServerDTO website);
         void UnscheduleWebsiteCheck(Guid websiteId);
         void UpdateWebsiteCheckSchedule(ServerDTO website);
+        bool IsScheduled(Guid websiteId);
     }
 }

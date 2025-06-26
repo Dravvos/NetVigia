@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.BLL.Service.Interfaces;
 using NetVigia.DTO;
@@ -12,9 +10,12 @@ namespace NetVigia.BLL.Service
     public class IntegrationService : IIntegrationService
     {
         private readonly IIntegrationRepository _repository;
-        public IntegrationService(IIntegrationRepository repository)
+        private readonly ILogger<IntegrationService> _logger;
+
+        public IntegrationService(IIntegrationRepository repository, ILogger<IntegrationService> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
 
         private void ValidarDTO(IntegrationDTO dto)
@@ -63,6 +64,17 @@ namespace NetVigia.BLL.Service
             dto.DataAlteracao = DateTime.UtcNow;
 
             await _repository.UpdateAsync(dto);
+        }
+
+        public async Task SendNotificationAsync(string endpoint, object data)
+        {
+            using var client = new HttpClient();
+            var json = JsonSerializer.Serialize(data);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync(endpoint, content);
+            response.EnsureSuccessStatusCode();    
+            
         }
     }
 }

@@ -135,30 +135,5 @@ namespace NetVigia.API.Controllers
             }
         }
 
-        [HttpPost("perform/{serverId:guid}")]
-        public async Task<IActionResult> PerformCheck(Guid serverId)
-        {
-            try
-            {
-                var cmd = new AddSiteCheckCommand(serverId);
-                var check = await _sender.Send(cmd);
-
-                if (check == null)
-                    return NotFound("Check could not be performed.");
-
-                return Ok(check);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                if (ex.InnerException == null)
-                    return StatusCode(500, ex.Message);
-
-                return StatusCode(500, ex.InnerException.Message);
-            }
-        }
     }
 }

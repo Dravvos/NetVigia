@@ -38,7 +38,7 @@ namespace NetVigia.API.Controllers
             catch (Exception ex)
             {
                 if (ex.InnerException == null)
-                    return StatusCode(StatusCodes.Status500InternalServerError,ex.Message);
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.InnerException.Message);
             }
         }
@@ -133,10 +133,8 @@ namespace NetVigia.API.Controllers
                     return BadRequest("Id do servidor não pode ser vazio");
 
                 var cmd = new DeleteServerCommand(id);
-                if (await _sender.Send(cmd))
-                    return NoContent();
-                else
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Erro ao excluir o servidor. Verifique se ele está vinculado a outros dados.");
+                await _sender.Send(cmd);
+                return NoContent();
             }
             catch (Exception ex)
             {

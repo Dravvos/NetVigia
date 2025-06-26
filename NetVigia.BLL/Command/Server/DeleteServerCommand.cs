@@ -7,5 +7,5 @@ using MediatR;
 
 namespace NetVigia.BLL.Command.Server
 {
-    public record DeleteServerCommand(Guid Id) : IRequest<bool>;
+    public record DeleteServerCommand(Guid Id) : IRequest;
 }

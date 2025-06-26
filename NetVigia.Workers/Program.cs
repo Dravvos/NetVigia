@@ -68,6 +68,9 @@ builder.Services.AddScoped<IIntegrationService, IntegrationService>();
 builder.Services.AddScoped<IIoTDBRepository, IoTDBRepository>();
 builder.Services.AddScoped<IIoTDBService, IoTDBService>();
 
+builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
+builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
+
 builder.Services.AddScoped<IServerRepository, ServerRepository>();
 builder.Services.AddScoped<IServerService, ServerService>();
 

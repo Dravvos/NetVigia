@@ -12,12 +12,13 @@ using Microsoft.Extensions.Logging;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.Workers.Workers.Interfaces;
 using NetVigia.DTO;
+using NetVigia.BLL.Service.Interfaces;
 
 namespace NetVigia.Workers.Workers
 {
     public class CheckOrchestratorWorker : BackgroundService
     {
-        
+
         private readonly ILogger<CheckOrchestratorWorker> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly TimeSpan _syncInterval = TimeSpan.FromMinutes(5);
@@ -35,7 +36,7 @@ namespace NetVigia.Workers.Workers
         {
             await Task.Delay(_initializationDelay, stoppingToken);
 
-            while (!stoppingToken.IsCancellationRequested) 
+            while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
@@ -62,24 +63,28 @@ namespace NetVigia.Workers.Workers
 
         }
 
-        private async Task SyncSchedules(ICheckScheduler scheduler, IEnumerable<ServerDTO> activeWebsites,
+        private async Task SyncSchedules(ICheckScheduler scheduler, List<ServerDTO> activeWebsites,
         CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var websitesToAddOrUpdate = new List<ServerDTO>();
             var currentScheduledIds = scheduler.GetScheduledWebsiteIds().ToHashSet();
+            var maintenanceService = _serviceProvider.GetRequiredService<IMaintenanceService>();
 
             // 1. Identificar sites novos ou modificados
 
             foreach (var website in activeWebsites)
             {
-                if(!_syncState.TryGetValue(website.Id.GetValueOrDefault(), out var state))
+                if (!_syncState.TryGetValue(website.Id.GetValueOrDefault(), out var state))
                 {
-                    //Novo site não registrado
-                    websitesToAddOrUpdate.Add(website);
-                    _syncState[website.Id.GetValueOrDefault()] = new WebsiteSyncState(website);
+                    //Novo site não registrado ou agendamento automático retirado para manutenção
+                    if (await maintenanceService.IsUnderMaintenanceAsync(website))
+                    {
+                        websitesToAddOrUpdate.Add(website);
+                        _syncState[website.Id.GetValueOrDefault()] = new WebsiteSyncState(website);
+                    }
                 }
-                else if(state.HasChanged(website))
+                else if (state.HasChanged(website))
                 {
                     //Site já registrado, mas com alterações
                     websitesToAddOrUpdate.Add(website);
@@ -130,6 +135,22 @@ namespace NetVigia.Workers.Workers
             // 4. Log do estado atual
             _logger.LogInformation("Synchronization completed. Active sites: {ActiveCount}, Scheduled sites: {ScheduledCount}",
                 activeWebsites.Count(), scheduler.GetScheduledWebsiteIds().Count);
+
+            // 5. Forçar re-agendamento para sites com manutenções ativas
+            foreach (var website in activeWebsites)
+            {
+                if (await maintenanceService.IsUnderMaintenanceAsync(website))
+                {
+                    // Se estiver em manutenção, cancelar agendamento temporário
+                    scheduler.UnscheduleWebsiteCheck(website.Id.GetValueOrDefault());
+                    _logger.LogInformation("Unscheduled website {WebsiteId} during maintenance", website.Id);
+                }
+                else if (!scheduler.IsScheduled(website.Id.GetValueOrDefault()))
+                {
+                    // Se não estiver agendado e não estiver em manutenção, agendar
+                    scheduler.ScheduleWebsiteCheck(website);
+                }
+            }
         }
     }
 

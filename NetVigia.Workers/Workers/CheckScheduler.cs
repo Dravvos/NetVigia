@@ -8,6 +8,8 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NetVigia.BLL.Command;
+using NetVigia.BLL.Repository.Interfaces;
+using NetVigia.BLL.Service.Interfaces;
 using NetVigia.DTO;
 using NetVigia.Workers.Workers.Interfaces;
 
@@ -41,44 +43,62 @@ namespace NetVigia.Workers.Workers
             return _timers.Keys.ToList();
         }
 
-        public void ScheduleWebsiteCheck(ServerDTO website)
+        public void ScheduleWebsiteCheck(ServerDTO server)
         {
-            UnscheduleWebsiteCheck(website.Id.GetValueOrDefault());
+            UnscheduleWebsiteCheck(server.Id.GetValueOrDefault());
 
             var timer = new Timer(async _ =>
             {
-                await ExecuteCheckAsync(website.Id.GetValueOrDefault());
+                await ExecuteCheckAsync(server.Id.GetValueOrDefault());
             },
             null,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(website.CheckIntervalSeconds));
+            TimeSpan.FromSeconds(server.CheckIntervalSeconds));
 
-            _timers[website.Id.GetValueOrDefault()] = (timer, website.CheckIntervalSeconds);
+            _timers[server.Id.GetValueOrDefault()] = (timer, server.CheckIntervalSeconds);
             _logger.LogDebug("Scheduled checks for website: {WebsiteId} with interval: {Interval}s",
-                website.Id, website.CheckIntervalSeconds);
+                server.Id, server.CheckIntervalSeconds);
         }
 
-        public void UnscheduleWebsiteCheck(Guid websiteId)
+        public void UnscheduleWebsiteCheck(Guid serverId)
         {
-            if (_timers.TryRemove(websiteId, out var timerInfo))
+            if (_timers.TryRemove(serverId, out var timerInfo))
             {
                 timerInfo.Timer.Dispose();
-                _logger.LogInformation("Unscheduled checks for website {WebsiteId}", websiteId);
+                _logger.LogInformation("Unscheduled checks for server {ServerId}", serverId);
             }
         }
 
-        private async Task ExecuteCheckAsync(Guid websiteId)
+        private async Task ExecuteCheckAsync(Guid serverId)
         {
             // Criar um escopo manualmente para serviços com escopo
             using var scope = _serviceProvider.CreateScope();
             try
             {
+                var serverRepository = scope.ServiceProvider.GetRequiredService<IServerRepository>();
+                var maintenanceService = scope.ServiceProvider.GetRequiredService<IMaintenanceService>();
+
+                // Verificar se o site ainda existe
+                var server = await serverRepository.GetByIdAsync(serverId);
+                if (server == null || !server.Active)
+                {
+                    UnscheduleWebsiteCheck(serverId);
+                    return;
+                }
+
+                // Verificar se está em manutenção
+                if (await maintenanceService.IsUnderMaintenanceAsync(server))
+                {
+                    _logger.LogInformation("Skipping check for server {ServerId} due to maintenance", serverId);
+                    return;
+                }
+
                 var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                await mediator.Send(new AddSiteCheckCommand(websiteId));
+                await mediator.Send(new AddSiteCheckCommand(serverId));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error executing scheduled check for website {WebsiteId}", websiteId);
+                _logger.LogError(ex, "Error executing scheduled check for website {WebsiteId}", serverId);
             }
         }
 
@@ -102,6 +122,9 @@ namespace NetVigia.Workers.Workers
             }
         }
 
-
+        public bool IsScheduled(Guid websiteId)
+        {
+            return _timers.TryGetValue(websiteId, out _);
+        }
     }
 }

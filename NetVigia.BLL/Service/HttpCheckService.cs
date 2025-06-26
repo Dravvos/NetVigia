@@ -9,6 +9,7 @@ using NetVigia.DTO;
 using NetVigia.BLL.Services.Interfaces;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using NetVigia.BLL.Service.Interfaces;
 
 namespace NetVigia.BLL.Services
 {
@@ -16,11 +17,15 @@ namespace NetVigia.BLL.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<HttpCheckService> _logger;
+        private readonly IIntegrationService _integrationService;
+        private readonly IMaintenanceService _maintenanceService;
 
-        public HttpCheckService(HttpClient httpClient, ILogger<HttpCheckService> logger)
+        public HttpCheckService(HttpClient httpClient, ILogger<HttpCheckService> logger, IIntegrationService integrationService, IMaintenanceService maintenanceService)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _integrationService = integrationService;
+            _maintenanceService = maintenanceService;
         }
 
         public async Task<CheckDTO> PerformCheckAsync(ServerDTO website)
@@ -32,15 +37,28 @@ namespace NetVigia.BLL.Services
             };
             try
             {
-                
+
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(website.TimeoutInSeconds));
+
+                if (await _maintenanceService.IsUnderMaintenanceAsync(website))
+                {
+                    _logger.LogInformation("Website {Url} is under maintenance, skipping check", website.URL);
+                    result.Up = true;
+                    result.StatusCode = 0;
+                    result.ResponseTimeInMs = 0;
+                    result.ErrorMessage = "Sob manutenção";
+                    result.Timestamp = DateTime.UtcNow;
+                    result.Server = website;
+
+                    return result;
+                }
+
                 var sw = new Stopwatch();
                 if (website.MonitoringType.Sigla == "ICMP")
                 {
                     var pingClient = new Ping();
-                    sw.Start();
-                    var res = await pingClient.SendPingAsync(website.URL.Replace("https://","").Replace("http://",""));
-                    sw.Stop();
+                    var res = await pingClient.SendPingAsync(website.URL.Replace("https://", "").Replace("http://", ""));
+                    result.ResponseTimeInMs = res.RoundtripTime;
                     switch (res.Status)
                     {
                         case IPStatus.Unknown:
@@ -88,7 +106,7 @@ namespace NetVigia.BLL.Services
                 else if (website.MonitoringType.Sigla == "HTTP")
                 {
                     var httpMethod = website.HTTPMethod.Sigla;
-                    var request = new HttpRequestMessage();                    
+                    var request = new HttpRequestMessage();
                     request.RequestUri = new Uri(website.URL);
 
                     switch (httpMethod)
@@ -97,7 +115,7 @@ namespace NetVigia.BLL.Services
                             request.Method = HttpMethod.Get;
                             break;
                         case "POST":
-                            request.Method = HttpMethod.Post;                            
+                            request.Method = HttpMethod.Post;
                             break;
                         case "PUT":
                             request.Method = HttpMethod.Put;
@@ -121,15 +139,100 @@ namespace NetVigia.BLL.Services
                     sw.Start();
                     var response = await _httpClient.SendAsync(request, cts.Token);
                     sw.Stop();
+
                     result.StatusCode = (int)response.StatusCode;
                     result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
-                    
+
+                    var integrations = await _integrationService.GetByUserAsync(website.UserId);
+                    if (integrations != null && integrations.Any())
+                    {
+                        foreach (var integration in integrations)
+                        {
+                            if (integration.IntegrationMethod.Sigla != "TEL") //Telegram
+                            {
+                                try
+                                {
+                                    object obj = new();
+
+                                    if (result.Up)
+                                    {
+                                        obj = new
+                                        {
+                                            @event = "check_up",
+                                            check = new
+                                            {
+                                                websiteId = website.Id,
+                                                url = website.URL,
+                                                statusCode = result.StatusCode,
+                                                down = false,
+                                                date = DateTime.UtcNow.Ticks,
+                                            }
+                                        };
+                                    }
+                                    else
+                                    {
+                                        obj = new
+                                        {
+                                            @event = "check_down",
+                                            check = new
+                                            {
+                                                websiteId = website.Id,
+                                                url = website.URL,
+                                                statusCode = result.StatusCode,
+                                                down = true,
+                                                date = DateTime.UtcNow.Ticks,
+                                            },
+                                            request = new
+                                            {
+                                                method = request.Method.Method,
+                                                url = request.RequestUri.ToString(),
+                                                headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                                                body = request.Content != null ? await request.Content.ReadAsStringAsync(cts.Token) : null
+                                            },
+                                            response = new
+                                            {
+                                                statusCode = result.StatusCode,
+                                                headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                                                body = await response.Content.ReadAsStringAsync(cts.Token),
+                                                responseTimeInMs = result.ResponseTimeInMs
+                                            }
+                                        };
+                                    }
+
+                                    await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, obj);
+
+                                    _logger.LogInformation("Notification for integration {IntegrationId} was sent successfully", integration.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error sending notification for integration {IntegrationId}", integration.Id);
+                                }
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    var message = result.Up
+                                        ? $"Check UP: {website.URL} - Status Code: {result.StatusCode}"
+                                        : $"Check DOWN: {website.URL} - Status Code: {result.StatusCode}";
+
+                                    await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, message);
+
+                                    _logger.LogInformation("Telegram notification for integration {IntegrationId} was sent successfully", integration.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error sending Telegram notification for integration {IntegrationId}", integration.Id);
+                                }
+                            }
+                        }
+                    }
                 }
                 else
                 {
                     using var client = new TcpClient();
                     var connectTask = client.ConnectAsync(website.URL, 80);
-                    if(await Task.WhenAny(connectTask, Task.Delay(website.TimeoutInSeconds)) == connectTask)
+                    if (await Task.WhenAny(connectTask, Task.Delay(website.TimeoutInSeconds)) == connectTask)
                     {
                         result.Up = client.Connected;
                         result.StatusCode = 200;
@@ -142,8 +245,10 @@ namespace NetVigia.BLL.Services
 
                 }
 
-                result.ResponseTimeInMs = sw.ElapsedMilliseconds;
-                
+
+                if (website.MonitoringType.Sigla != "ICMP")
+                    result.ResponseTimeInMs = sw.ElapsedMilliseconds;
+
                 if (!string.IsNullOrEmpty(website.ExpectedContent) && result.Up)
                 {
                     // Se precisar verificar conteúdo, fazemos uma requisição GET

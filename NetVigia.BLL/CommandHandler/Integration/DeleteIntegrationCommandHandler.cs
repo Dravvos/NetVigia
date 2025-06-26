@@ -9,24 +9,17 @@ using NetVigia.BLL.Service.Interfaces;
 
 namespace NetVigia.BLL.CommandHandler.Integration
 {
-    public class DeleteIntegrationCommandHandler : IRequestHandler<DeleteIntegrationCommand, bool>
+    public class DeleteIntegrationCommandHandler : IRequestHandler<DeleteIntegrationCommand>
     {
         private readonly IIntegrationService _integrationService;
         public DeleteIntegrationCommandHandler(IIntegrationService integrationService)
         {
             _integrationService = integrationService;
         }
-        public async Task<bool> Handle(DeleteIntegrationCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteIntegrationCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
                 await _integrationService.DeleteAsync(request.id);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+         
         }
     }
 }

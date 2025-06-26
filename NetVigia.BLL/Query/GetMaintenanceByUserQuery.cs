@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
+using NetVigia.DTO;
 
-namespace NetVigia.BLL.Command.Integration
+namespace NetVigia.BLL.Query
 {
-    public record DeleteIntegrationCommand(Guid id) : IRequest;
+    public record GetMaintenanceByUserQuery(Guid userId):IRequest<List<MaintenanceDTO>>;
 }

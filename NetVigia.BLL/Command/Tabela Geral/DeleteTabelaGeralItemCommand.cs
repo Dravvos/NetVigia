@@ -7,6 +7,6 @@ using MediatR;
 
 namespace NetVigia.BLL.Command.TabelaGeral
 {
-    public record DeleteTabelaGeralItemCommand(Guid id) : IRequest<bool>;
+    public record DeleteTabelaGeralItemCommand(Guid id) : IRequest;
     
 }
