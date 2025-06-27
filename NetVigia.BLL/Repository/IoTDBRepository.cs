@@ -23,7 +23,7 @@ namespace NetVigia.BLL.Repository
             _serverRepository = serverRepository;
         }
 
-        private async Task<CheckDTO?> ParseRowRecord(RowRecord rowRecord, string? siteUrl)
+        private CheckDTO? ParseRowRecord(RowRecord rowRecord, string? siteUrl)
         {
             try
             {
@@ -36,12 +36,8 @@ namespace NetVigia.BLL.Repository
                 int.TryParse(fields[1].ToString(), out int statusCode);
                 float.TryParse(fields[2].ToString(), out float latency);
 
-                var server = await _serverRepository.GetByUrl(siteUrl);
-
                 var dto = new CheckDTO
                 {
-                    Server = server,
-                    ServerId = server.Id.GetValueOrDefault(),
                     Timestamp = timestamp,
                     StatusCode = statusCode,
                     ResponseTimeInMs = latency,
@@ -75,9 +71,19 @@ namespace NetVigia.BLL.Repository
                 {
                     var row = dataSet.Next();
                     var timestamp = row.GetDateTime();
-                    var dto = await ParseRowRecord(row, url);
+                    var dto = ParseRowRecord(row, url);
                     if (dto != null)
                         result.Add(dto);
+                }
+
+                var server = await _serverRepository.GetByUrl(url);
+                if (server != null)
+                {
+                    foreach (var item in result)
+                    {
+                        item.Server = server;
+                        item.ServerId = server.Id.GetValueOrDefault();
+                    }
                 }
             }
             return result;

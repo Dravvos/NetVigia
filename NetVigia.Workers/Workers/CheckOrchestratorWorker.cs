@@ -69,7 +69,8 @@ namespace NetVigia.Workers.Workers
             cancellationToken.ThrowIfCancellationRequested();
             var websitesToAddOrUpdate = new List<ServerDTO>();
             var currentScheduledIds = scheduler.GetScheduledWebsiteIds().ToHashSet();
-            var maintenanceService = _serviceProvider.GetRequiredService<IMaintenanceService>();
+            using var scope = _serviceProvider.CreateScope();
+            var maintenanceService = scope.ServiceProvider.GetRequiredService<IMaintenanceService>();
 
             // 1. Identificar sites novos ou modificados
 
@@ -78,7 +79,7 @@ namespace NetVigia.Workers.Workers
                 if (!_syncState.TryGetValue(website.Id.GetValueOrDefault(), out var state))
                 {
                     //Novo site não registrado ou agendamento automático retirado para manutenção
-                    if (await maintenanceService.IsUnderMaintenanceAsync(website))
+                    if (await maintenanceService.IsUnderMaintenanceAsync(website) == false)
                     {
                         websitesToAddOrUpdate.Add(website);
                         _syncState[website.Id.GetValueOrDefault()] = new WebsiteSyncState(website);

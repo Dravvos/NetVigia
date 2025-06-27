@@ -54,7 +54,16 @@ namespace NetVigia.BLL.Repository
         public async Task<IEnumerable<MaintenanceDTO>> GetActiveMaintenanceWindowsAsync()
         {
             var now = DateTime.UtcNow;
-            var model = await con.Maintenances.Include(x => x.Servers).Where(x => now >= x.StartDate && now <= x.EndDate).ToListAsync();
+            var model = await con.Maintenances.Where(x => now >= x.StartDate && now <= x.EndDate).ToListAsync();
+
+            foreach(var item in model)
+            {
+                item.Servers = await con.MaintenanceServers
+                    .Where(x => x.MaintenanceId == item.Id)
+                    .Select(x => x.Server)
+                    .ToListAsync();
+            }
+
             return Map<List<MaintenanceDTO>>.Convert(model);
         }
 
