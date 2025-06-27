@@ -1,10 +1,11 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NetVigia.BLL.Command.Maintenance;
 using NetVigia.BLL.Query;
 using NetVigia.DTO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace NetVigia.API.Controllers
 {
@@ -57,9 +58,11 @@ namespace NetVigia.API.Controllers
             {
                 if (dto == null)
                     return BadRequest("Invalid maintenance data.");
+                
+                dto.UsuarioInclusao = User.FindFirstValue(JwtRegisteredClaimNames.Name);
                 var command = new SaveMaintenanceCommand(dto);
                 await _mediator.Send(command);
-                return Created();
+                return StatusCode(StatusCodes.Status201Created, dto.Id);
             }
             catch (ArgumentException ex)
             {
@@ -83,6 +86,8 @@ namespace NetVigia.API.Controllers
             {
                 if (dto == null || id != dto.Id)
                     return BadRequest("Invalid maintenance data.");
+
+                dto.UsuarioAlteracao = User.FindFirstValue(JwtRegisteredClaimNames.Name);
                 var command = new SaveMaintenanceCommand(dto);
                 await _mediator.Send(command);
                 return NoContent();

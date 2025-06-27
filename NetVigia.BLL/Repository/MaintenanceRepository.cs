@@ -23,17 +23,22 @@ namespace NetVigia.BLL.Repository
         public async Task CreateMaintenanceAsync(MaintenanceDTO dto)
         {
             var model = Map<MaintenanceModel>.Convert(dto);
+            model.Servers.Clear();
+            model.StartDate = DateTime.SpecifyKind(model.StartDate, DateTimeKind.Utc);
+            model.EndDate = DateTime.SpecifyKind(model.EndDate, DateTimeKind.Utc);
             await con.Maintenances.AddAsync(model);
-            foreach (var server in model.Servers)
+            await con.SaveChangesAsync();
+            foreach (var server in dto.Servers)
             {
-                await con.MaintenanceServers.AddAsync(new MaintenanceServerModel
+                var msModel = new MaintenanceServerModel
                 {
-                    DataInclusao = model.DataInclusao,
+                    DataInclusao = DateTime.UtcNow,
                     UsuarioInclusao = model.UsuarioInclusao,
                     Id = Guid.NewGuid(),
                     MaintenanceId = model.Id,
-                    ServerId = server.Id
-                });
+                    ServerId = server.Id.GetValueOrDefault()
+                };
+                await con.MaintenanceServers.AddAsync(msModel);
             }
             await con.SaveChangesAsync();
         }
@@ -49,17 +54,25 @@ namespace NetVigia.BLL.Repository
         public async Task<IEnumerable<MaintenanceDTO>> GetActiveMaintenanceWindowsAsync()
         {
             var now = DateTime.UtcNow;
-            var model = await con.Maintenances.Where(x => now >= x.StartDate && now <= x.EndDate).ToListAsync();
+            var model = await con.Maintenances.Include(x => x.Servers).Where(x => now >= x.StartDate && now <= x.EndDate).ToListAsync();
             return Map<List<MaintenanceDTO>>.Convert(model);
         }
 
         public async Task<List<MaintenanceDTO>> GetAllMaintenanceAsync(Guid userId)
         {
-            var maintenances = await con.Maintenances
-                .Where(x => x.UserId == userId).Include(x => x.Servers)
-                .Select(x => Map<MaintenanceDTO>.Convert(x))
-                .ToListAsync();
-            return maintenances;
+            var model = await con.Maintenances.Where(x => x.UserId == userId).Include(x => x.Servers).ToListAsync();
+
+
+            foreach (var item in model)
+            {
+                var listAux = await con.MaintenanceServers.Where(x => x.MaintenanceId == item.Id).ToListAsync();
+                var serversIds = listAux.Select(x => x.ServerId).Distinct().ToList();
+                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).ToListAsync();
+            }
+            
+            var dto = Map<List<MaintenanceDTO>>.Convert(model);
+          
+            return dto;
         }
 
         public async Task<MaintenanceDTO> GetMaintenanceByIdAsync(Guid id)
