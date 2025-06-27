@@ -76,7 +76,7 @@ namespace NetVigia.BLL.Repository
             {
                 var listAux = await con.MaintenanceServers.Where(x => x.MaintenanceId == item.Id).ToListAsync();
                 var serversIds = listAux.Select(x => x.ServerId).Distinct().ToList();
-                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).ToListAsync();
+                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x=>x.MonitoringType).Include(x=>x.HTTPMethod).ToListAsync();
             }
             
             var dto = Map<List<MaintenanceDTO>>.Convert(model);
