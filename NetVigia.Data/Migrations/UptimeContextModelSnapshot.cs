@@ -29,6 +29,10 @@ namespace NetVigia.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("Id");
 
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean")
+                        .HasColumnName("Active");
+
                     b.Property<DateTime?>("DataAlteracao")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("DataAlteracao");
@@ -40,6 +44,14 @@ namespace NetVigia.Data.Migrations
                     b.Property<Guid>("IdTGIntegrationMethod")
                         .HasColumnType("uuid")
                         .HasColumnName("IdTGIntegrationMethod");
+
+                    b.Property<Guid>("IdTGSendNotification")
+                        .HasColumnType("uuid")
+                        .HasColumnName("IdTGSendNotification");
+
+                    b.Property<Guid>("IdTGTypeNotification")
+                        .HasColumnType("uuid")
+                        .HasColumnName("IdTGTypeNotification");
 
                     b.Property<string>("IntegrationEndpoint")
                         .IsRequired()
@@ -67,6 +79,10 @@ namespace NetVigia.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IdTGIntegrationMethod");
+
+                    b.HasIndex("IdTGSendNotification");
+
+                    b.HasIndex("IdTGTypeNotification");
 
                     b.ToTable("Integrations");
                 });
@@ -336,7 +352,23 @@ namespace NetVigia.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("NetVigia.Data.Models.TabelaGeralItemModel", "SendNotification")
+                        .WithMany()
+                        .HasForeignKey("IdTGSendNotification")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NetVigia.Data.Models.TabelaGeralItemModel", "TypeNotification")
+                        .WithMany()
+                        .HasForeignKey("IdTGTypeNotification")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("IntegrationMethod");
+
+                    b.Navigation("SendNotification");
+
+                    b.Navigation("TypeNotification");
                 });
 
             modelBuilder.Entity("NetVigia.Data.Models.MaintenanceServerModel", b =>

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace NetVigia.Data.Models
 {
+    [Table("Servers")]
     public class ServerModel:BaseModel
     {
         [Required]

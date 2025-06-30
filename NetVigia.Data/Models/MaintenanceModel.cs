@@ -26,6 +26,7 @@ namespace NetVigia.Data.Models
         [Required]
         [Column("UserId")]
         public Guid UserId { get; set; }
+
         
         public virtual List<ServerModel> Servers { get; set; } = new List<ServerModel>();
     }

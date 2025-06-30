@@ -36,13 +36,17 @@ namespace NetVigia.BLL.Repository
 
         public async Task<IntegrationDTO> GetByIdAsync(Guid id)
         {
-            var model = await con.Integrations.Include(x => x.IntegrationMethod).FirstOrDefaultAsync(x => x.Id == id);
+            var model = await con.Integrations.Include(x => x.IntegrationMethod).Include(x=>x.SendNotification)
+                .Include(x=>x.TypeNotification).FirstOrDefaultAsync(x => x.Id == id);
+
             return Map<IntegrationDTO>.Convert(model);
         }
 
         public async Task<List<IntegrationDTO>> GetByUserAsync(Guid userId)
         {
-            var model = await con.Integrations.Where(x => x.Id == userId).Include(x => x.IntegrationMethod).ToListAsync();
+            var model = await con.Integrations.Where(x => x.UserId == userId).Include(x => x.IntegrationMethod)
+                .Include(x=>x.SendNotification).Include(x => x.TypeNotification).ToListAsync();
+
             return Map<List<IntegrationDTO>>.Convert(model);
         }
 

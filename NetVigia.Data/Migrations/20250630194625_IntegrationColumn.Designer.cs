@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NetVigia.Data.Migrations
 {
     [DbContext(typeof(UptimeContext))]
-    [Migration("20250625173238_IntegrationTable")]
-    partial class IntegrationTable
+    [Migration("20250630194625_IntegrationColumn")]
+    partial class IntegrationColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,6 +32,10 @@ namespace NetVigia.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("Id");
 
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean")
+                        .HasColumnName("Active");
+
                     b.Property<DateTime?>("DataAlteracao")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("DataAlteracao");
@@ -43,6 +47,14 @@ namespace NetVigia.Data.Migrations
                     b.Property<Guid>("IdTGIntegrationMethod")
                         .HasColumnType("uuid")
                         .HasColumnName("IdTGIntegrationMethod");
+
+                    b.Property<Guid>("IdTGSendNotification")
+                        .HasColumnType("uuid")
+                        .HasColumnName("IdTGSendNotification");
+
+                    b.Property<Guid>("IdTGTypeNotification")
+                        .HasColumnType("uuid")
+                        .HasColumnName("IdTGTypeNotification");
 
                     b.Property<string>("IntegrationEndpoint")
                         .IsRequired()
@@ -71,7 +83,98 @@ namespace NetVigia.Data.Migrations
 
                     b.HasIndex("IdTGIntegrationMethod");
 
+                    b.HasIndex("IdTGSendNotification");
+
+                    b.HasIndex("IdTGTypeNotification");
+
                     b.ToTable("Integrations");
+                });
+
+            modelBuilder.Entity("NetVigia.Data.Models.MaintenanceModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime?>("DataAlteracao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DataAlteracao");
+
+                    b.Property<DateTime>("DataInclusao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DataInclusao");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("EndDate");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("StartDate");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("Title");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("UserId");
+
+                    b.Property<string>("UsuarioAlteracao")
+                        .HasColumnType("text")
+                        .HasColumnName("UsuarioAlteracao");
+
+                    b.Property<string>("UsuarioInclusao")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("UsuarioInclusao");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Maintenances");
+                });
+
+            modelBuilder.Entity("NetVigia.Data.Models.MaintenanceServerModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime?>("DataAlteracao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DataAlteracao");
+
+                    b.Property<DateTime>("DataInclusao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DataInclusao");
+
+                    b.Property<Guid>("MaintenanceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("MaintenanceId");
+
+                    b.Property<Guid>("ServerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ServerId");
+
+                    b.Property<string>("UsuarioAlteracao")
+                        .HasColumnType("text")
+                        .HasColumnName("UsuarioAlteracao");
+
+                    b.Property<string>("UsuarioInclusao")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("UsuarioInclusao");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaintenanceId");
+
+                    b.HasIndex("ServerId");
+
+                    b.ToTable("MaintenanceServers");
                 });
 
             modelBuilder.Entity("NetVigia.Data.Models.ServerModel", b =>
@@ -113,6 +216,9 @@ namespace NetVigia.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("IdTGMonitoringType ");
 
+                    b.Property<Guid?>("MaintenanceModelId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
@@ -149,6 +255,8 @@ namespace NetVigia.Data.Migrations
                     b.HasIndex("IdTGHTTPMethod");
 
                     b.HasIndex("IdTGMonitoringType");
+
+                    b.HasIndex("MaintenanceModelId");
 
                     b.ToTable("Servers");
                 });
@@ -247,7 +355,42 @@ namespace NetVigia.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("NetVigia.Data.Models.TabelaGeralItemModel", "SendNotification")
+                        .WithMany()
+                        .HasForeignKey("IdTGSendNotification")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NetVigia.Data.Models.TabelaGeralItemModel", "TypeNotification")
+                        .WithMany()
+                        .HasForeignKey("IdTGTypeNotification")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("IntegrationMethod");
+
+                    b.Navigation("SendNotification");
+
+                    b.Navigation("TypeNotification");
+                });
+
+            modelBuilder.Entity("NetVigia.Data.Models.MaintenanceServerModel", b =>
+                {
+                    b.HasOne("NetVigia.Data.Models.MaintenanceModel", "Maintenance")
+                        .WithMany()
+                        .HasForeignKey("MaintenanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NetVigia.Data.Models.ServerModel", "Server")
+                        .WithMany()
+                        .HasForeignKey("ServerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Maintenance");
+
+                    b.Navigation("Server");
                 });
 
             modelBuilder.Entity("NetVigia.Data.Models.ServerModel", b =>
@@ -261,6 +404,10 @@ namespace NetVigia.Data.Migrations
                         .HasForeignKey("IdTGMonitoringType")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("NetVigia.Data.Models.MaintenanceModel", null)
+                        .WithMany("Servers")
+                        .HasForeignKey("MaintenanceModelId");
 
                     b.Navigation("HTTPMethod");
 
@@ -276,6 +423,11 @@ namespace NetVigia.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("TabelaGeral");
+                });
+
+            modelBuilder.Entity("NetVigia.Data.Models.MaintenanceModel", b =>
+                {
+                    b.Navigation("Servers");
                 });
 #pragma warning restore 612, 618
         }

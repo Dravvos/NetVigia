@@ -144,11 +144,32 @@ namespace NetVigia.BLL.Services
                     result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
 
                     var integrations = await _integrationService.GetByUserAsync(website.UserId);
+                  /*
                     if (integrations != null && integrations.Any())
                     {
                         foreach (var integration in integrations)
                         {
-                            if (integration.IntegrationMethod.Sigla != "TEL") //Telegram
+                            if (integration.IntegrationMethod.Sigla == "DISC")
+                            {
+                                try
+                                {
+                                    object embed = await generateEmbbedForDiscordWebhook(website, result, cts, request, response);
+
+                                    var payload = new
+                                    {
+                                        embeds = new[] { embed }
+                                    };
+
+                                    await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, payload);
+
+                                    _logger.LogInformation("Notification for integration {IntegrationId} was sent successfully", integration.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error sending notification for integration {IntegrationId}", integration.Id);
+                                }
+                            }
+                            else if (integration.IntegrationMethod.Sigla != "TEL") //Telegram
                             {
                                 try
                                 {
@@ -198,14 +219,10 @@ namespace NetVigia.BLL.Services
                                             }
                                         };
                                     }
-
-                                    await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, obj);
-
-                                    _logger.LogInformation("Notification for integration {IntegrationId} was sent successfully", integration.Id);
                                 }
-                                catch (Exception ex)
+                                catch
                                 {
-                                    _logger.LogError(ex, "Error sending notification for integration {IntegrationId}", integration.Id);
+                                    _logger.LogError("Error creating notification object for integration {IntegrationId}", integration.Id);
                                 }
                             }
                             else
@@ -227,6 +244,7 @@ namespace NetVigia.BLL.Services
                             }
                         }
                     }
+                */
                 }
                 else
                 {
@@ -269,6 +287,56 @@ namespace NetVigia.BLL.Services
                 result.ErrorMessage = ex.Message;
             }
             return result;
+        }
+
+        private async Task<object> generateEmbbedForDiscordWebhook(ServerDTO website, CheckDTO result, CancellationTokenSource cts,
+            HttpRequestMessage request, HttpResponseMessage response)
+        {
+            object embed = new
+            {
+                @event = "check_up",
+                title = "Website Check-up",
+                description = $"Website: {website.URL}",
+                fields = new object[] {
+                                            new { name = "Status Code", value = result.StatusCode, inline = true },
+                                            new { name = "Está no ar", value = result.Up ? "SIM" : "NÃO", inline = true },
+                                            new { name = "Data", value = DateTime.FromFileTimeUtc(DateTime.UtcNow.Ticks).ToString() + " UTC", inline = false }
+                                            },
+                color = result.Up == false ? 0xFF0000 : 0x00FF00
+            };
+
+            if (result.Up == false)
+            {
+                embed = new
+                {
+                    @event = "check_down",
+                    title = "Website Check-up",
+                    description = $"Website: {website.URL}",
+                    fields = new object[] {
+                                            new { name = "Status Code", value = result.StatusCode, inline = true },
+                                            new { name = "Está no ar", value = result.Up ? "SIM" : "NÃO", inline = true },
+                                            new { name = "Data", value = DateTime.FromFileTimeUtc(DateTime.UtcNow.Ticks).ToString() + " UTC", inline = false },
+                                            new {name = "Requisição", value =new
+                                            {
+                                                method = request.Method.Method,
+                                                url = request.RequestUri.ToString(),
+                                                headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                                                body = request.Content != null ? await request.Content.ReadAsStringAsync(cts.Token) : null
+                                            }
+                                            },
+                                            new {name= "Resposta", value = new
+                                            {
+                                                statusCode = result.StatusCode,
+                                                headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                                                body = await response.Content.ReadAsStringAsync(cts.Token),
+                                                responseTimeInMs = result.ResponseTimeInMs
+                                            }}
+                                            },
+                    color = result.Up == false ? 0xFF0000 : 0x00FF00
+                };
+            }
+
+            return embed;
         }
     }
 }

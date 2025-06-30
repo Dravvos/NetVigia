@@ -22,7 +22,19 @@ namespace NetVigia.Data.Models
         [Required]
         [Column("IntegrationEndpoint")]
         public string? IntegrationEndpoint { get; set; }
-        
+
+        [Required]
+        [Column("IdTGSendNotification")]
+        public Guid IdTGSendNotification { get; set; } //Instantly, after 1 minute, after 1 hour...
+
+        [Required]
+        [Column("IdTGTypeNotification")]
+        public Guid IdTGTypeNotification { get; set; } //Success, Error or All
+
+        [Required]
+        [Column("Active")]
+        public bool Active { get; set; }
+
         [Required]
         [Column("UserId")]
         public Guid UserId { get; set; }
@@ -30,5 +42,9 @@ namespace NetVigia.Data.Models
 
         [ForeignKey("IdTGIntegrationMethod")]
         public virtual TabelaGeralItemModel? IntegrationMethod { get; set; }
+        [ForeignKey("IdTGSendNotification")]
+        public virtual TabelaGeralItemModel? SendNotification { get; set; }
+        [ForeignKey("IdTGTypeNotification")]
+        public virtual TabelaGeralItemModel? TypeNotification { get; set; }
     }
 }
