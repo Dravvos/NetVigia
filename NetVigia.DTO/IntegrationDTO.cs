@@ -14,9 +14,11 @@ namespace NetVigia.DTO
         public string? IntegrationName { get; set; }
         public string? IntegrationEndpoint { get; set; }
         public Guid UserId { get; set; }
+        public bool Active { get; set; }
         public Guid IdTGSendNotification { get; set; }
         public Guid IdTGTypeNotification { get; set; }
 
+        public List<ServerDTO>? Servers { get; set; }
         public TabelaGeralItemDTO? IntegrationMethod { get; set; }
         public TabelaGeralItemDTO? SendNotification { get; set; }        
         public TabelaGeralItemDTO? TypeNotification { get; set; }

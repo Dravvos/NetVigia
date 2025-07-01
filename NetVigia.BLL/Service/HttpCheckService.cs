@@ -10,6 +10,7 @@ using NetVigia.BLL.Services.Interfaces;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using NetVigia.BLL.Service.Interfaces;
+using System.Security.Cryptography.X509Certificates;
 
 namespace NetVigia.BLL.Services
 {
@@ -59,6 +60,7 @@ namespace NetVigia.BLL.Services
                     var pingClient = new Ping();
                     var res = await pingClient.SendPingAsync(website.URL.Replace("https://", "").Replace("http://", ""));
                     result.ResponseTimeInMs = res.RoundtripTime;
+
                     switch (res.Status)
                     {
                         case IPStatus.Unknown:
@@ -139,112 +141,120 @@ namespace NetVigia.BLL.Services
                     sw.Start();
                     var response = await _httpClient.SendAsync(request, cts.Token);
                     sw.Stop();
-
                     result.StatusCode = (int)response.StatusCode;
                     result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
 
                     var integrations = await _integrationService.GetByUserAsync(website.UserId);
-                  
+
                     if (integrations != null && integrations.Any())
                     {
                         foreach (var integration in integrations)
                         {
-                            if (integration.IntegrationMethod.Sigla == "DISC")
+                            if (integration.Active)
                             {
-                                try
+                                if ((result.Up && integration.TypeNotification.Sigla == "SUC") ||
+                                            (result.Up == false && integration.TypeNotification.Sigla == "ERR") ||
+                                             integration.TypeNotification.Sigla == "TDS")
                                 {
-                                    object embed = await generateEmbbedForDiscordWebhook(website, result, cts, request, response);
-
-                                    var payload = new
+                                    if (integration.IntegrationMethod.Sigla == "DISC")
                                     {
-                                        embeds = new[] { embed }
-                                    };
-
-                                    await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, payload);
-
-                                    _logger.LogInformation("Notification for integration {IntegrationId} was sent successfully", integration.Id);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Error sending notification for integration {IntegrationId}", integration.Id);
-                                }
-                            }
-                            else if (integration.IntegrationMethod.Sigla != "TEL") //Telegram
-                            {
-                                try
-                                {
-                                    object obj = new();
-
-                                    if (result.Up)
-                                    {
-                                        obj = new
+                                        try
                                         {
-                                            @event = "check_up",
-                                            check = new
+                                            object embed = await generateEmbbedForDiscordWebhook(website, result, cts, request, response);
+
+                                            var payload = new
                                             {
-                                                websiteId = website.Id,
-                                                url = website.URL,
-                                                statusCode = result.StatusCode,
-                                                down = false,
-                                                date = DateTime.UtcNow.Ticks,
+                                                embeds = new[] { embed }
+                                            };
+
+                                            await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, payload);
+
+                                            _logger.LogInformation("Notification for integration {IntegrationId} was sent successfully", integration.Id);
+
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger.LogError(ex, "Error sending notification for integration {IntegrationId}", integration.Id);
+                                        }
+                                    }
+                                    else if (integration.IntegrationMethod.Sigla != "TEL") //Telegram
+                                    {
+                                        try
+                                        {
+                                            object obj = new();
+
+                                            if (result.Up)
+                                            {
+                                                obj = new
+                                                {
+                                                    @event = "check_up",
+                                                    check = new
+                                                    {
+                                                        websiteId = website.Id,
+                                                        url = website.URL,
+                                                        statusCode = result.StatusCode,
+                                                        down = false,
+                                                        date = DateTime.UtcNow.Ticks,
+                                                    }
+                                                };
                                             }
-                                        };
+                                            else
+                                            {
+                                                obj = new
+                                                {
+                                                    @event = "check_down",
+                                                    check = new
+                                                    {
+                                                        websiteId = website.Id,
+                                                        url = website.URL,
+                                                        statusCode = result.StatusCode,
+                                                        down = true,
+                                                        date = DateTime.UtcNow.Ticks,
+                                                    },
+                                                    request = new
+                                                    {
+                                                        method = request.Method.Method,
+                                                        url = request.RequestUri.ToString(),
+                                                        headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                                                        body = request.Content != null ? await request.Content.ReadAsStringAsync(cts.Token) : null
+                                                    },
+                                                    response = new
+                                                    {
+                                                        statusCode = result.StatusCode,
+                                                        headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                                                        body = await response.Content.ReadAsStringAsync(cts.Token),
+                                                        responseTimeInMs = result.ResponseTimeInMs
+                                                    }
+                                                };
+                                            }
+                                        }
+                                        catch
+                                        {
+                                            _logger.LogError("Error creating notification object for integration {IntegrationId}", integration.Id);
+                                        }
                                     }
                                     else
                                     {
-                                        obj = new
+                                        try
                                         {
-                                            @event = "check_down",
-                                            check = new
-                                            {
-                                                websiteId = website.Id,
-                                                url = website.URL,
-                                                statusCode = result.StatusCode,
-                                                down = true,
-                                                date = DateTime.UtcNow.Ticks,
-                                            },
-                                            request = new
-                                            {
-                                                method = request.Method.Method,
-                                                url = request.RequestUri.ToString(),
-                                                headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
-                                                body = request.Content != null ? await request.Content.ReadAsStringAsync(cts.Token) : null
-                                            },
-                                            response = new
-                                            {
-                                                statusCode = result.StatusCode,
-                                                headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
-                                                body = await response.Content.ReadAsStringAsync(cts.Token),
-                                                responseTimeInMs = result.ResponseTimeInMs
-                                            }
-                                        };
+                                            var message = result.Up
+                                                ? $"Check UP: {website.URL} - Status Code: {result.StatusCode}"
+                                                : $"Check DOWN: {website.URL} - Status Code: {result.StatusCode}";
+
+                                            await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, message);
+
+                                            _logger.LogInformation("Telegram notification for integration {IntegrationId} was sent successfully", integration.Id);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger.LogError(ex, "Error sending Telegram notification for integration {IntegrationId}", integration.Id);
+                                        }
                                     }
-                                }
-                                catch
-                                {
-                                    _logger.LogError("Error creating notification object for integration {IntegrationId}", integration.Id);
-                                }
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    var message = result.Up
-                                        ? $"Check UP: {website.URL} - Status Code: {result.StatusCode}"
-                                        : $"Check DOWN: {website.URL} - Status Code: {result.StatusCode}";
-
-                                    await _integrationService.SendNotificationAsync(integration.IntegrationEndpoint, message);
-
-                                    _logger.LogInformation("Telegram notification for integration {IntegrationId} was sent successfully", integration.Id);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Error sending Telegram notification for integration {IntegrationId}", integration.Id);
                                 }
                             }
                         }
                     }
-                
+
                 }
                 else
                 {
@@ -260,7 +270,6 @@ namespace NetVigia.BLL.Services
                         result.Up = false;
                         result.StatusCode = 408;
                     }
-
                 }
 
 

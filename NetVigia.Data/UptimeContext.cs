@@ -20,6 +20,7 @@ namespace NetVigia.Data
         }
 
         public DbSet<IntegrationUserModel> Integrations { get; set; }
+        public DbSet<IntegrationServerModel> IntegrationServers { get; set; }
         public DbSet<MaintenanceModel> Maintenances { get; set; }
         public DbSet<MaintenanceServerModel> MaintenanceServers { get; set; }
         public DbSet<ServerModel> Servers { get; set; }

@@ -25,6 +25,20 @@ namespace NetVigia.BLL.Repository
             var model = Map<IntegrationUserModel>.Convert(dto);
             await con.Integrations.AddAsync(model);
             await con.SaveChangesAsync();
+
+            foreach(var item in dto.Servers)
+            {
+                var integrationServer = new IntegrationServerModel
+                {
+                    DataInclusao = DateTime.UtcNow,
+                    UsuarioInclusao = model.UsuarioInclusao,
+                    Id = Guid.NewGuid(),
+                    IntegrationId = model.Id,
+                    ServerId = item.Id.GetValueOrDefault()
+                };
+                await con.IntegrationServers.AddAsync(integrationServer);
+            }
+            await con.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -36,18 +50,34 @@ namespace NetVigia.BLL.Repository
 
         public async Task<IntegrationDTO> GetByIdAsync(Guid id)
         {
-            var model = await con.Integrations.Include(x => x.IntegrationMethod).Include(x=>x.SendNotification)
-                .Include(x=>x.TypeNotification).FirstOrDefaultAsync(x => x.Id == id);
+            var model = await con.Integrations.Include(x => x.IntegrationMethod).Include(x => x.SendNotification)
+                .Include(x => x.TypeNotification).FirstOrDefaultAsync(x => x.Id == id);
 
-            return Map<IntegrationDTO>.Convert(model);
+            var dto = Map<IntegrationDTO>.Convert(model);
+
+            var integrationServer = await con.IntegrationServers.Where(x => x.IntegrationId == dto.Id)
+                .Include(x => x.Server).Select(x => x.Server).ToListAsync();
+
+            dto.Servers = Map<List<ServerDTO>>.Convert(integrationServer);
+
+            return dto;
         }
 
         public async Task<List<IntegrationDTO>> GetByUserAsync(Guid userId)
         {
             var model = await con.Integrations.Where(x => x.UserId == userId).Include(x => x.IntegrationMethod)
-                .Include(x=>x.SendNotification).Include(x => x.TypeNotification).ToListAsync();
+                .Include(x => x.SendNotification).Include(x => x.TypeNotification).ToListAsync();
 
-            return Map<List<IntegrationDTO>>.Convert(model);
+            var dto = Map<List<IntegrationDTO>>.Convert(model);
+            foreach (var item in dto)
+            {
+                var integrationServer = await con.IntegrationServers.Where(x => x.IntegrationId == item.Id)
+                    .Include(x => x.Server).Select(x => x.Server).ToListAsync();
+
+                item.Servers = Map<List<ServerDTO>>.Convert(integrationServer);
+            }
+
+            return dto;
         }
 
         public async Task UpdateAsync(IntegrationDTO dto)
@@ -58,9 +88,19 @@ namespace NetVigia.BLL.Repository
             model.IntegrationName = dto.IntegrationName;
             model.IntegrationEndpoint = dto.IntegrationEndpoint;
             model.IdTGSendNotification = dto.IdTGSendNotification;
-            model.IdTGTypeNotification = dto.IdTGTypeNotification;            
+            model.IdTGTypeNotification = dto.IdTGTypeNotification;
+            model.Active = dto.Active;
             model.DataAlteracao = dto.DataAlteracao;
             model.UsuarioAlteracao = dto.UsuarioAlteracao;
+
+            foreach (var item in dto.Servers)
+            {
+                var integrationServer = await con.IntegrationServers.FirstAsync(x=>x.ServerId == item.Id && x.IntegrationId == dto.Id);
+                integrationServer.ServerId = item.Id.GetValueOrDefault();
+                integrationServer.IntegrationId = dto.Id.GetValueOrDefault();
+                integrationServer.DataAlteracao = dto.DataAlteracao;
+                integrationServer.UsuarioAlteracao = dto.UsuarioAlteracao;
+            }
 
             await con.SaveChangesAsync();
         }
