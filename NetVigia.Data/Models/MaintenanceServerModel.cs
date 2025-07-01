@@ -21,9 +21,9 @@ namespace NetVigia.Data.Models
 
 
         [ForeignKey("MaintenanceId")]
-        public virtual MaintenanceModel Maintenance { get; set; } = new MaintenanceModel();
+        public virtual MaintenanceModel? Maintenance { get; set; }
         
         [ForeignKey("ServerId")]
-        public virtual ServerModel Server { get; set; } = new ServerModel();
+        public virtual ServerModel? Server { get; set; }
     }
 }

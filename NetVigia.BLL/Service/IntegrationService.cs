@@ -31,6 +31,9 @@ namespace NetVigia.BLL.Service
 
             if (dto.UserId == Guid.Empty)
                 throw new ArgumentNullException("Id do usuário não pode ser vazio");
+
+            if (dto.Servers == null || dto.Servers.Any() == false)
+                throw new ArgumentNullException("Selecione quais servidores estão conectados a esta integração");
         }
 
         public async Task CreateAsync(IntegrationDTO dto)

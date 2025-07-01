@@ -46,7 +46,5 @@ namespace NetVigia.Data.Models
         public virtual TabelaGeralItemModel? SendNotification { get; set; }
         [ForeignKey("IdTGTypeNotification")]
         public virtual TabelaGeralItemModel? TypeNotification { get; set; }
-
-        public virtual List<ServerModel> Servers { get; set; } = new List<ServerModel>();
     }
 }

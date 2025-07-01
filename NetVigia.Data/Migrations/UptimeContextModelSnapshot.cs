@@ -38,10 +38,12 @@ namespace NetVigia.Data.Migrations
                         .HasColumnName("DataInclusao");
 
                     b.Property<Guid>("IntegrationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("IntegrationId");
 
                     b.Property<Guid>("ServerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("ServerId");
 
                     b.Property<string>("UsuarioAlteracao")
                         .HasColumnType("text")
@@ -252,9 +254,6 @@ namespace NetVigia.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("IdTGMonitoringType ");
 
-                    b.Property<Guid?>("IntegrationUserModelId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("MaintenanceModelId")
                         .HasColumnType("uuid");
 
@@ -294,8 +293,6 @@ namespace NetVigia.Data.Migrations
                     b.HasIndex("IdTGHTTPMethod");
 
                     b.HasIndex("IdTGMonitoringType");
-
-                    b.HasIndex("IntegrationUserModelId");
 
                     b.HasIndex("MaintenanceModelId");
 
@@ -465,10 +462,6 @@ namespace NetVigia.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("NetVigia.Data.Models.IntegrationUserModel", null)
-                        .WithMany("Servers")
-                        .HasForeignKey("IntegrationUserModelId");
-
                     b.HasOne("NetVigia.Data.Models.MaintenanceModel", null)
                         .WithMany("Servers")
                         .HasForeignKey("MaintenanceModelId");
@@ -487,11 +480,6 @@ namespace NetVigia.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("TabelaGeral");
-                });
-
-            modelBuilder.Entity("NetVigia.Data.Models.IntegrationUserModel", b =>
-                {
-                    b.Navigation("Servers");
                 });
 
             modelBuilder.Entity("NetVigia.Data.Models.MaintenanceModel", b =>
