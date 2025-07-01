@@ -144,7 +144,7 @@ namespace NetVigia.BLL.Services
                     result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
 
                     var integrations = await _integrationService.GetByUserAsync(website.UserId);
-                  /*
+                  
                     if (integrations != null && integrations.Any())
                     {
                         foreach (var integration in integrations)
@@ -244,7 +244,7 @@ namespace NetVigia.BLL.Services
                             }
                         }
                     }
-                */
+                
                 }
                 else
                 {

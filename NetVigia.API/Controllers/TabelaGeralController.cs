@@ -108,6 +108,28 @@ namespace NetVigia.API.Controllers
             return Ok(tabelaGeral);
         }
 
+        [Route("[action]/{tabelaGeralId:guid}/{sigla}")]
+        [HttpGet, Authorize]
+        public async Task<IActionResult> GetTabelaGeralItem(Guid tabelaGeralId, string sigla)
+        {
+            try
+            {
+                var cmd = new GetTabelaGeralItemQuery(tabelaGeralId, sigla);
+                var tabelaGeral = await _sender.Send(cmd);
+                if (tabelaGeral == null)
+                    return NotFound();
+
+                return Ok(tabelaGeral);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                else
+                    return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
         [Route("[action]")]
         [HttpGet, Authorize]
         public async Task<IActionResult> GetTabelasGeraisItems(Guid? tabelaGeralId = null)

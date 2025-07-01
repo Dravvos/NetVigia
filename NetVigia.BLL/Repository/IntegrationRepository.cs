@@ -57,6 +57,8 @@ namespace NetVigia.BLL.Repository
             model.IdTGIntegrationMethod = dto.IdTGIntegrationMethod;
             model.IntegrationName = dto.IntegrationName;
             model.IntegrationEndpoint = dto.IntegrationEndpoint;
+            model.IdTGSendNotification = dto.IdTGSendNotification;
+            model.IdTGTypeNotification = dto.IdTGTypeNotification;            
             model.DataAlteracao = dto.DataAlteracao;
             model.UsuarioAlteracao = dto.UsuarioAlteracao;
 
