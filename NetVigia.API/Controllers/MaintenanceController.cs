@@ -53,6 +53,38 @@ namespace NetVigia.API.Controllers
             }
         }
 
+        [HttpGet("{serverId:guid?}/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetByDate(Guid? serverId, DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
+                if (string.IsNullOrEmpty(cookie))
+                    return Unauthorized();
+                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
+                var claims = decodedToken.Claims;
+                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+                if (usuarioId == Guid.Empty)
+                    return Unauthorized();
+
+                var query = new GetMaintenanceByDateQuery(serverId, usuarioId, startDate, endDate);
+                var maintenance = await _mediator.Send(query);
+                if (maintenance == null || maintenance.Any() == false)
+                    return NotFound();
+
+                return Ok(maintenance);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.InnerException.Message);
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> CreateMaintenance([FromBody] MaintenanceDTO dto)
         {
@@ -60,7 +92,7 @@ namespace NetVigia.API.Controllers
             {
                 if (dto == null)
                     return BadRequest("Invalid maintenance data.");
-                
+
                 dto.UsuarioInclusao = User.FindFirstValue(JwtRegisteredClaimNames.Name);
                 var command = new SaveMaintenanceCommand(dto);
                 await _mediator.Send(command);

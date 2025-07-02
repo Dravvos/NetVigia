@@ -56,7 +56,7 @@ namespace NetVigia.BLL.Repository
             var now = DateTime.UtcNow;
             var model = await con.Maintenances.Where(x => now >= x.StartDate && now <= x.EndDate).ToListAsync();
 
-            foreach(var item in model)
+            foreach (var item in model)
             {
                 item.Servers = await con.MaintenanceServers
                     .Where(x => x.MaintenanceId == item.Id)
@@ -76,11 +76,32 @@ namespace NetVigia.BLL.Repository
             {
                 var listAux = await con.MaintenanceServers.Where(x => x.MaintenanceId == item.Id).ToListAsync();
                 var serversIds = listAux.Select(x => x.ServerId).Distinct().ToList();
-                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x=>x.MonitoringType).Include(x=>x.HTTPMethod).ToListAsync();
+                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x => x.MonitoringType).Include(x => x.HTTPMethod).ToListAsync();
             }
-            
+
             var dto = Map<List<MaintenanceDTO>>.Convert(model);
-          
+
+            return dto;
+        }
+
+        public async Task<List<MaintenanceDTO>> GetByDateAsync(Guid? serverId, Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var model = await con.Maintenances.Where(x => x.UserId == userId && x.StartDate >= startDate && x.EndDate <= endDate)
+                                                .Include(x => x.Servers).ToListAsync();
+            if (serverId.HasValue && serverId.Value != Guid.Empty)
+            {
+                model = model.Where(x => x.Servers.Any(s => s.Id == serverId.Value)).ToList();
+            }
+
+            foreach (var item in model)
+            {
+                var listAux = await con.MaintenanceServers.Where(x => x.MaintenanceId == item.Id).ToListAsync();
+                var serversIds = listAux.Select(x => x.ServerId).Distinct().ToList();
+                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x => x.MonitoringType).Include(x => x.HTTPMethod).ToListAsync();
+            }
+
+            var dto = Map<List<MaintenanceDTO>>.Convert(model);
+
             return dto;
         }
 
@@ -100,11 +121,12 @@ namespace NetVigia.BLL.Repository
         {
             var model = await con.Maintenances.FirstAsync(x => x.Id == dto.Id);
 
-            model.StartDate = dto.StartDate;
-            model.EndDate = dto.EndDate;
+            model.StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
+            model.EndDate = DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Utc);
             model.Title = dto.Title;
             model.DataAlteracao = dto.DataAlteracao;
             model.UsuarioAlteracao = dto.UsuarioAlteracao;
+
 
             var servers = await con.MaintenanceServers
                 .Where(x => x.MaintenanceId == dto.Id).ToListAsync();
@@ -126,6 +148,7 @@ namespace NetVigia.BLL.Repository
                     ServerId = server.Id.GetValueOrDefault()
                 });
             }
+
 
             await con.SaveChangesAsync();
         }

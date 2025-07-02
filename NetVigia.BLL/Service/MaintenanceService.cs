@@ -116,5 +116,10 @@ namespace NetVigia.BLL.Service
                 return false;
             }
         }
+
+        public async Task<List<MaintenanceDTO>> GetByDateAsync(Guid? serverId, Guid userId, DateTime startDate, DateTime endDate)
+        {
+            return await _repository.GetByDateAsync(serverId, userId, startDate, endDate);
+        }
     }
 }

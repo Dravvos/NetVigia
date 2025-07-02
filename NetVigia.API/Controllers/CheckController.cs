@@ -143,8 +143,8 @@ namespace NetVigia.API.Controllers
             {
                 if (string.IsNullOrEmpty(url))
                     return BadRequest("URL não pode ser vazia");
-                url = "https://meicaixa.com.br";
-                //url = Uri.UnescapeDataString(url); // Decodifica a URL para lidar com caracteres especiais
+                
+                url = Uri.UnescapeDataString(url); // Decodifica a URL para lidar com caracteres especiais
                 var cert = CheckCertificate(url);
                 if (cert == null)
                     return NotFound();
