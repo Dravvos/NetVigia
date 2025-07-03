@@ -8,5 +8,5 @@ using NetVigia.DTO;
 
 namespace NetVigia.BLL.Query.Checks
 {
-    public record GetChecksByDateQuery(DateTime startDate, DateTime endDate, Guid serverId): IRequest<List<CheckDTO>>;
+    public record GetChecksByDateQuery(DateTime startDate, DateTime endDate, Guid? serverId = null): IRequest<List<CheckDTO>>;
 }

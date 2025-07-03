@@ -21,6 +21,27 @@ namespace NetVigia.API.Controllers
             _sender = sender;
         }
 
+        [HttpGet("{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetChecks(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var cmd = new GetChecksByDateQuery(startDate, endDate);
+                var checks = await _sender.Send(cmd);
+                if (checks == null || checks.Any() == false)
+                    return NotFound();
+
+                return Ok(checks);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
+
         [HttpGet("{serverId:guid}/{startDate:datetime}/{endDate:datetime}")]
         public async Task<IActionResult> GetChecks(Guid serverId, DateTime startDate, DateTime endDate)
         {

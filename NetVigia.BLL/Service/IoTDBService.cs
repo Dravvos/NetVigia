@@ -63,27 +63,56 @@ namespace NetVigia.BLL.Service
             return success;
         }
 
-        public async Task<List<CheckDTO>> ListChecks(Guid serverId, DateTime startDate, DateTime? endDate)
+        public async Task<List<CheckDTO>> ListChecks(Guid? serverId, DateTime startDate, DateTime? endDate, Guid? userId = null)
         {
+            var ret = new List<CheckDTO>();
+            var server = new ServerDTO();
+            if (serverId.HasValue && serverId.Value != Guid.Empty)
+            {
+                server = await _serverRepository.GetByIdAsync(serverId.Value);
+                if (server == null)
+                    return ret;
+            }
+            if (serverId.HasValue)
+            {
+                string url = server.URL;
+                startDate = startDate.Date;
+                if (endDate.HasValue == false)
+                    endDate = DateTime.UtcNow;
 
-            var server = await _serverRepository.GetByIdAsync(serverId);
-            if (server == null)
-                return new List<CheckDTO>();
+                endDate = endDate.Value.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+                if (string.IsNullOrEmpty(url))
+                    return ret;
 
-            string url = server.URL;
-            startDate = startDate.Date;
-            if (endDate.HasValue == false)
-                endDate = DateTime.UtcNow;
+                var sanitizedUrl = SanitizeSiteUrl(url);
+                var query = $"SELECT * FROM root.netvigia.{sanitizedUrl} " +
+                           $"WHERE time >= {ConvertToUnixTimestamp(startDate)} AND time <= {ConvertToUnixTimestamp(endDate.Value)}";
+                ret = await _repository.ListChecks(query, url);
+            }
+            else if (serverId.HasValue == false && userId.HasValue)
+            {
+                var servers = await _serverRepository.GetAllAsync(userId.Value);
+                foreach(var item in servers)
+                {
+                    string url = item.URL;
+                    startDate = startDate.Date;
+                    if (endDate.HasValue == false)
+                        endDate = DateTime.UtcNow;
 
-            endDate = endDate.Value.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
-            if (string.IsNullOrEmpty(url))
-                return new List<CheckDTO>();
+                    endDate = endDate.Value.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+                    if (string.IsNullOrEmpty(url))
+                        return ret;
 
-            var sanitizedUrl = SanitizeSiteUrl(url);
-            var query = $"SELECT * FROM root.netvigia.{sanitizedUrl} " +
-                       $"WHERE time >= {ConvertToUnixTimestamp(startDate)} AND time <= {ConvertToUnixTimestamp(endDate.Value)}";
+                    var sanitizedUrl = SanitizeSiteUrl(url);
+                    var query = $"SELECT * FROM root.netvigia.{sanitizedUrl} " +
+                               $"WHERE time >= {ConvertToUnixTimestamp(startDate)} AND time <= {ConvertToUnixTimestamp(endDate.Value)}";
+                    ret.AddRange(await _repository.ListChecks(query, url));
+                }
+            }
+            else
+                return ret;
 
-            return await _repository.ListChecks(query, url);
+                return ret;
         }
 
         private long ConvertToUnixTimestamp(DateTime dateTime)
