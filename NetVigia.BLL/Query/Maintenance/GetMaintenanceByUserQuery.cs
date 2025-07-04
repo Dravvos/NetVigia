@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MediatR;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.Query
+namespace NetVigia.BLL.Query.Maintenance
 {
     public record GetMaintenanceByUserQuery(Guid userId):IRequest<List<MaintenanceDTO>>;
 }

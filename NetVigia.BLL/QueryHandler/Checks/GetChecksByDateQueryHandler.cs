@@ -22,7 +22,7 @@ namespace NetVigia.BLL.QueryHandler.Checks
 
         public async Task<List<CheckDTO>> Handle(GetChecksByDateQuery request, CancellationToken cancellationToken)
         {
-            var checks = await _service.ListChecks(request.serverId, request.startDate, request.endDate);
+            var checks = await _service.ListChecks(request.serverId, request.startDate, request.endDate, request.userId);
             return checks;
         }
     }

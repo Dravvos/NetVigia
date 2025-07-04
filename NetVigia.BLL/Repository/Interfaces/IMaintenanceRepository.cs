@@ -10,8 +10,9 @@ namespace NetVigia.BLL.Repository.Interfaces
     public interface IMaintenanceRepository
     {
         Task<List<MaintenanceDTO>> GetAllMaintenanceAsync(Guid userId);
-        Task<List<MaintenanceDTO>> GetByDateAsync(Guid? serverId, Guid userId, DateTime startDate, DateTime endDate);
+        Task<List<MaintenanceDTO>> GetByDateAsync(List<Guid> serverIds, DateTime startDate, DateTime endDate);
         Task<MaintenanceDTO> GetMaintenanceByIdAsync(Guid id);
+        Task<TimeSpan> GetTotalMaintenanceDuration(DateTime startDate, DateTime endDate, List<Guid> serverIds);
         Task CreateMaintenanceAsync(MaintenanceDTO maintenance);
         Task UpdateMaintenanceAsync(MaintenanceDTO maintenance);
         Task DeleteMaintenanceAsync(Guid id);

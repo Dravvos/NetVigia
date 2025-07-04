@@ -117,9 +117,14 @@ namespace NetVigia.BLL.Service
             }
         }
 
-        public async Task<List<MaintenanceDTO>> GetByDateAsync(Guid? serverId, Guid userId, DateTime startDate, DateTime endDate)
+        public async Task<List<MaintenanceDTO>> GetByDateAsync(List<Guid>? serverIds, DateTime startDate, DateTime endDate)
         {
-            return await _repository.GetByDateAsync(serverId, userId, startDate, endDate);
+            return await _repository.GetByDateAsync(serverIds,startDate, endDate);
+        }
+
+        public async Task<TimeSpan> GetTotalMaintenanceDuration(DateTime startDate, DateTime endDate, List<Guid> serverIds)
+        {
+            return await _repository.GetTotalMaintenanceDuration(startDate, endDate, serverIds);
         }
     }
 }

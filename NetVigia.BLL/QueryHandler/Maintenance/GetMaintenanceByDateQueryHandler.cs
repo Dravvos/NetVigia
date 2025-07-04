@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using NetVigia.BLL.Query;
+using NetVigia.BLL.Query.Maintenance;
 using NetVigia.BLL.Service.Interfaces;
 using NetVigia.DTO;
 
-namespace NetVigia.BLL.QueryHandler
+namespace NetVigia.BLL.QueryHandler.Maintenance
 {
     public class GetMaintenanceByDateQueryHandler : IRequestHandler<GetMaintenanceByDateQuery, List<MaintenanceDTO>>
     {
@@ -19,7 +19,7 @@ namespace NetVigia.BLL.QueryHandler
         }
         public async Task<List<MaintenanceDTO>> Handle(GetMaintenanceByDateQuery request, CancellationToken cancellationToken)
         {
-            return await _maintenanceService.GetByDateAsync(request.serverId, request.userId, request.startDate, request.endDate);
+            return await _maintenanceService.GetByDateAsync(request.serverIds, request.startDate, request.endDate);
         }
     }
 }

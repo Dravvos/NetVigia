@@ -84,14 +84,9 @@ namespace NetVigia.BLL.Repository
             return dto;
         }
 
-        public async Task<List<MaintenanceDTO>> GetByDateAsync(Guid? serverId, Guid userId, DateTime startDate, DateTime endDate)
+        public async Task<List<MaintenanceDTO>> GetByDateAsync(List<Guid> serverIds, DateTime startDate, DateTime endDate)
         {
-            var model = await con.Maintenances.Where(x => x.UserId == userId && x.StartDate >= startDate && x.EndDate <= endDate)
-                                                .Include(x => x.Servers).ToListAsync();
-            if (serverId.HasValue && serverId.Value != Guid.Empty)
-            {
-                model = model.Where(x => x.Servers.Any(s => s.Id == serverId.Value)).ToList();
-            }
+            var model = await con.Maintenances.Where(x => x.StartDate >= startDate && x.EndDate <= endDate).ToListAsync();
 
             foreach (var item in model)
             {
@@ -100,8 +95,12 @@ namespace NetVigia.BLL.Repository
                 item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x => x.MonitoringType).Include(x => x.HTTPMethod).ToListAsync();
             }
 
-            var dto = Map<List<MaintenanceDTO>>.Convert(model);
+            if (serverIds != null && serverIds.Count > 0)
+            {
+                model = model.Where(x => x.Servers.Any(s => serverIds.Contains(s.Id))).ToList();
+            }
 
+            var dto = Map<List<MaintenanceDTO>>.Convert(model);
             return dto;
         }
 
@@ -109,6 +108,36 @@ namespace NetVigia.BLL.Repository
         {
             var model = await con.Maintenances.Include(x => x.Servers).FirstOrDefaultAsync(x => x.Id == id);
             return Map<MaintenanceDTO>.Convert(model);
+        }
+
+        public async Task<TimeSpan> GetTotalMaintenanceDuration(DateTime startDate, DateTime endDate, List<Guid> serverIds)
+        {
+            var model  = await con.Maintenances.Where(x=>x.StartDate >= startDate && x.EndDate <= endDate).ToListAsync();
+
+            foreach (var item in model)
+            {
+                var listAux = await con.MaintenanceServers.Where(x => x.MaintenanceId == item.Id).ToListAsync();
+                var serversIds = listAux.Select(x => x.ServerId).Distinct().ToList();
+                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x => x.MonitoringType).Include(x => x.HTTPMethod).ToListAsync();
+            }
+
+            if (serverIds != null && serverIds.Count > 0)
+            {
+                model = model.Where(x => x.Servers.Any(s => serverIds.Contains(s.Id))).ToList();
+            }
+
+            var times = new List<TimeSpan>();
+
+            foreach(var item in model)
+            {
+                var duration = item.EndDate - item.StartDate;
+                if (duration.TotalSeconds > 0)
+                {
+                    times.Add(duration);
+                }
+            }
+            return new TimeSpan(times.Sum(x => x.Ticks));
+
         }
 
         public async Task<IEnumerable<MaintenanceDTO>> GetUpcomingMaintenanceWindowsAsync()

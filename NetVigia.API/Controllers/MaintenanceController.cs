@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NetVigia.BLL.Command.Maintenance;
 using NetVigia.BLL.Query;
+using NetVigia.BLL.Query.Maintenance;
 using NetVigia.DTO;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -53,8 +55,8 @@ namespace NetVigia.API.Controllers
             }
         }
 
-        [HttpGet("{serverId:guid?}/{startDate:datetime}/{endDate:datetime}")]
-        public async Task<IActionResult> GetByDate(Guid? serverId, DateTime startDate, DateTime endDate)
+        [HttpGet("{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetByDate(DateTime startDate, DateTime endDate, [FromQuery] List<Guid> ids)
         {
             try
             {
@@ -67,12 +69,12 @@ namespace NetVigia.API.Controllers
                 if (usuarioId == Guid.Empty)
                     return Unauthorized();
 
-                var query = new GetMaintenanceByDateQuery(serverId, usuarioId, startDate, endDate);
-                var maintenance = await _mediator.Send(query);
-                if (maintenance == null || maintenance.Any() == false)
-                    return NotFound();
+                var ret = new List<MaintenanceDTO>();
 
-                return Ok(maintenance);
+                var query = new GetMaintenanceByDateQuery(ids, startDate, endDate);
+                ret.AddRange(await _mediator.Send(query));
+
+                return Ok(ret);
             }
             catch (Exception ex)
             {
@@ -84,6 +86,23 @@ namespace NetVigia.API.Controllers
             }
         }
 
+        [HttpGet("GetTotalTime/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetTotalMaintenanceDuration(DateTime startDate, DateTime endDate, [FromQuery] List<Guid> serverIds)
+        {
+            try
+            {
+                var query = new GetTotalMaintenanceDurationQuery(startDate, endDate, serverIds);
+                var time = await _mediator.Send(query);
+                return Ok(time);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.InnerException.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateMaintenance([FromBody] MaintenanceDTO dto)
