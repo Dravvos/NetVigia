@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.Data;
@@ -84,6 +81,42 @@ namespace NetVigia.BLL.Repository
             return dto;
         }
 
+        public async Task<TimeSpan> GetAverageMaintenanceDuration(DateTime startDate, DateTime endDate, List<Guid> serverIds)
+        {
+            var model = await con.Maintenances.Where(x => x.StartDate >= startDate && x.EndDate <= endDate).ToListAsync();
+
+            foreach (var item in model)
+            {
+                var listAux = await con.MaintenanceServers.Where(x => x.MaintenanceId == item.Id).ToListAsync();
+                var serversIds = listAux.Select(x => x.ServerId).Distinct().ToList();
+                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x => x.MonitoringType).Include(x => x.HTTPMethod).ToListAsync();
+            }
+
+            if (serverIds != null && serverIds.Count > 0)
+            {
+                model = model.Where(x => x.Servers.Any(s => serverIds.Contains(s.Id))).ToList();
+            }
+
+            var times = new List<TimeSpan>();
+
+            foreach (var item in model)
+            {
+                var duration = item.EndDate - item.StartDate;
+                if (duration.TotalSeconds > 0)
+                {
+                    times.Add(duration);
+                }
+            }
+
+            if (times.Count > 0)
+            {
+                var averageTicks = times.Sum(x => x.Ticks) / times.Count;
+                return new TimeSpan(averageTicks);
+            }
+
+            return new TimeSpan();
+        }
+
         public async Task<List<MaintenanceDTO>> GetByDateAsync(List<Guid> serverIds, DateTime startDate, DateTime endDate)
         {
             var model = await con.Maintenances.Where(x => x.StartDate >= startDate && x.EndDate <= endDate).ToListAsync();
@@ -104,6 +137,82 @@ namespace NetVigia.BLL.Repository
             return dto;
         }
 
+        public async Task<Dictionary<string, int>> GetGroupedByDateAsync(Guid groupingType, List<Guid> serverIds, DateTime startDate, DateTime endDate)
+        {
+            startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+            endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+            var model = await con.Maintenances.Where(x => x.StartDate >= startDate && x.EndDate <= endDate).ToListAsync();
+
+            foreach (var item in model)
+            {
+                var listAux = await con.MaintenanceServers.Where(x => x.MaintenanceId == item.Id).ToListAsync();
+                var serversIds = listAux.Select(x => x.ServerId).Distinct().ToList();
+                item.Servers = await con.Servers.Where(x => serversIds.Contains(x.Id)).Include(x => x.MonitoringType).Include(x => x.HTTPMethod).ToListAsync();
+            }
+
+            if (serverIds != null && serverIds.Count > 0)
+            {
+                model = model.Where(x => x.Servers.Any(s => serverIds.Contains(s.Id))).ToList();
+            }
+
+            var tgi = await con.TabelaGeralItem.FirstOrDefaultAsync(x => x.Id == groupingType);
+            var groups = new Dictionary<string, int>();
+            switch (tgi.Sigla)
+            {
+                case "DIA":
+                    groups = model.GroupBy(x => x.StartDate.Date).Select(x => new KeyValuePair<string, int>
+                    (x.Key.ToShortDateString(), x.Count())).ToDictionary(x => x.Key, x => x.Value);
+                    break;
+                case "MES":
+                    groups = model.GroupBy(x => new DateTime(x.StartDate.Year, x.StartDate.Month, 1))
+                        .Select(x => new KeyValuePair<string, int>
+                        (x.Key.ToString("MMM yyyy"), x.Count())).ToDictionary(x => x.Key, x => x.Value);
+                    break;
+                case "ANO":
+                    groups = model.GroupBy(x => x.StartDate.Year)
+                        .Select(x => new KeyValuePair<string, int>
+                        (x.Key.ToString(), x.Count())).ToDictionary(x => x.Key, x => x.Value);
+                    break;
+                case "SEM":
+                    groups = model.GroupBy(x =>
+                    {
+                        var date = x.StartDate;
+                        DateTime weekStart = date.StartOfWeek();
+                        var culture = CultureInfo.CurrentCulture;
+                        var firstDayOfWeek = culture.DateTimeFormat.FirstDayOfWeek;
+                        int diff = (7 + (date.DayOfWeek - firstDayOfWeek)) % 7;
+
+                        bool startsInDifferentMonth = weekStart.Month != date.Month;
+                        bool startsInDifferentYear = weekStart.Year != date.Year;
+
+                        if (startsInDifferentMonth || startsInDifferentYear)
+                        {
+                            if (date.Day < 7)
+                                diff = date.Day - 1; 
+
+                            return date.AddDays(-1 * diff).Date.ToString("MMM yyyy");
+                        }
+                        else
+                            return date.AddDays(-1 * diff).Date.ToString("MMM yyyy");
+                    })
+                        .Select(x => new KeyValuePair<string, int>
+                        (x.Key, x.Count())).ToDictionary(x => x.Key, x => x.Value);
+
+                    break;
+                case "HORA":
+                    groups = model.GroupBy(x => new DateTime(x.StartDate.Year, x.StartDate.Month, x.StartDate.Day, x.StartDate.Hour, 0, 0)).Select(x => new KeyValuePair<string, int>
+                    (x.Key.ToLocalTime().ToString("dd-MM-yyyy HH:mm:ss"), x.Count())).ToDictionary(x => x.Key, x => x.Value);
+                    break;
+                default:
+                    break;
+            }
+
+
+
+
+            return groups;
+        }
+
         public async Task<MaintenanceDTO> GetMaintenanceByIdAsync(Guid id)
         {
             var model = await con.Maintenances.Include(x => x.Servers).FirstOrDefaultAsync(x => x.Id == id);
@@ -112,7 +221,7 @@ namespace NetVigia.BLL.Repository
 
         public async Task<TimeSpan> GetTotalMaintenanceDuration(DateTime startDate, DateTime endDate, List<Guid> serverIds)
         {
-            var model  = await con.Maintenances.Where(x=>x.StartDate >= startDate && x.EndDate <= endDate).ToListAsync();
+            var model = await con.Maintenances.Where(x => x.StartDate >= startDate && x.EndDate <= endDate).ToListAsync();
 
             foreach (var item in model)
             {
@@ -128,7 +237,7 @@ namespace NetVigia.BLL.Repository
 
             var times = new List<TimeSpan>();
 
-            foreach(var item in model)
+            foreach (var item in model)
             {
                 var duration = item.EndDate - item.StartDate;
                 if (duration.TotalSeconds > 0)
@@ -137,7 +246,6 @@ namespace NetVigia.BLL.Repository
                 }
             }
             return new TimeSpan(times.Sum(x => x.Ticks));
-
         }
 
         public async Task<IEnumerable<MaintenanceDTO>> GetUpcomingMaintenanceWindowsAsync()
@@ -180,6 +288,14 @@ namespace NetVigia.BLL.Repository
 
 
             await con.SaveChangesAsync();
+        }
+    }
+    public static class DateTimeExtensions
+    {
+        public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek = DayOfWeek.Sunday)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
         }
     }
 }

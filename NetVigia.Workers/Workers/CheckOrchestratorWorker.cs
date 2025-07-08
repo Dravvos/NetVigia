@@ -93,7 +93,7 @@ namespace NetVigia.Workers.Workers
                 }
             }
 
-            // 2. Identificar sites removidos ou desativados
+            // 2. Identificar sites removidos ou desativados para manutenção
             var websitesToRemove = new List<Guid>();
             foreach (var siteId in _syncState.Keys)
             {

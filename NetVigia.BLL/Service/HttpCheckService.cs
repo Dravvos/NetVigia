@@ -142,9 +142,13 @@ namespace NetVigia.BLL.Services
                     var response = await _httpClient.SendAsync(request, cts.Token);
                     sw.Stop();
                     result.StatusCode = (int)response.StatusCode;
-                    result.Up = response.IsSuccessStatusCode && (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
+                    if (website.ExpectedStatusCode >= 200 && website.ExpectedStatusCode <= 299)
+                        result.Up = response.IsSuccessStatusCode;
 
-                    var integrations = await _integrationService.GetByUserAsync(website.UserId);
+                    else
+                        result.Up = (website.ExpectedStatusCode == 0 || (int)response.StatusCode == website.ExpectedStatusCode);
+
+                    var integrations = (await _integrationService.GetByUserAsync(website.UserId)).Where(x => x.Active).ToList();
 
                     if (integrations != null && integrations.Any())
                     {
@@ -259,7 +263,7 @@ namespace NetVigia.BLL.Services
                 else
                 {
                     using var client = new TcpClient();
-                    var connectTask = client.ConnectAsync(website.URL, 80);
+                    var connectTask = client.ConnectAsync(website.URL, website.Port);
                     if (await Task.WhenAny(connectTask, Task.Delay(website.TimeoutInSeconds)) == connectTask)
                     {
                         result.Up = client.Connected;

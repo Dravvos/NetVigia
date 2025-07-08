@@ -126,5 +126,15 @@ namespace NetVigia.BLL.Service
         {
             return await _repository.GetTotalMaintenanceDuration(startDate, endDate, serverIds);
         }
+
+        public async Task<TimeSpan> GetAverageMaintenanceDuration(DateTime startDate, DateTime endDate, List<Guid> serverIds)
+        {
+            return await _repository.GetAverageMaintenanceDuration(startDate, endDate, serverIds);
+        }
+
+        public async Task<Dictionary<string, int>> GetGroupedByDateAsync(Guid groupingType, List<Guid> serverIds, DateTime startDate, DateTime endDate)
+        {
+            return await _repository.GetGroupedByDateAsync(groupingType, serverIds, startDate, endDate);
+        }
     }
 }

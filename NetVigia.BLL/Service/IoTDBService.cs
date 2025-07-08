@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Apache.IoTDB;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver.Core.Servers;
 using NetVigia.BLL.Repository.Interfaces;
 using NetVigia.BLL.Service.Interfaces;
 using NetVigia.DTO;
@@ -92,7 +93,7 @@ namespace NetVigia.BLL.Service
             else if (serverId.HasValue == false && userId.HasValue)
             {
                 var servers = await _serverRepository.GetAllAsync(userId.Value);
-                foreach(var item in servers)
+                foreach (var item in servers)
                 {
                     string url = item.URL;
                     startDate = startDate.Date;
@@ -112,7 +113,7 @@ namespace NetVigia.BLL.Service
             else
                 return ret;
 
-                return ret;
+            return ret;
         }
 
         private long ConvertToUnixTimestamp(DateTime dateTime)
@@ -252,6 +253,29 @@ namespace NetVigia.BLL.Service
                                         }).ToList();
 
             return averageByTimestamp;
+        }
+
+        public async Task<double> GetUptimePercentageOfAllServersAsync(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            startDate = startDate.Date;
+
+            endDate = endDate.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            var checks = new List<CheckDTO>();
+
+            var servers = await _serverRepository.GetAllAsync(userId);
+            foreach (var server in servers)
+            {
+                checks.AddRange(await ListChecks(server.Id, startDate, endDate));
+            }
+            if (checks.Count == 0)
+                return 0;
+
+            var upChecks = checks.Where(x => x.Up).ToList();
+
+            var uptimePercentage = Math.Round((double)upChecks.Count / checks.Count * 100, 2);
+
+            return uptimePercentage;
         }
     }
 }

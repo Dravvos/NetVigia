@@ -87,10 +87,13 @@ namespace NetVigia.API.Controllers
         }
 
         [HttpGet("GetTotalTime/{startDate:datetime}/{endDate:datetime}")]
-        public async Task<IActionResult> GetTotalMaintenanceDuration(DateTime startDate, DateTime endDate, [FromQuery] List<Guid> serverIds)
+        public async Task<IActionResult> GetTotalMaintenanceDuration(DateTime startDate, DateTime endDate, [FromQuery] List<Guid>? serverIds = null)
         {
             try
             {
+                if (serverIds == null || serverIds.Any() == false)
+                    return UnprocessableEntity();
+
                 var query = new GetTotalMaintenanceDurationQuery(startDate, endDate, serverIds);
                 var time = await _mediator.Send(query);
                 return Ok(time);
@@ -100,6 +103,50 @@ namespace NetVigia.API.Controllers
                 if (ex.InnerException != null)
                     return StatusCode(StatusCodes.Status500InternalServerError, ex.InnerException.Message);
 
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet("GetAverageTime/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetAverageMaintenanceDuration(DateTime startDate, DateTime endDate, [FromQuery] List<Guid>? serverIds = null)
+        {
+            try
+            {
+                if (serverIds == null || serverIds.Any() == false)
+                    return UnprocessableEntity();
+                var query = new GetAverageMaintenanceDurationQuery(startDate, endDate, serverIds);
+                var time = await _mediator.Send(query);
+                return Ok(time);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.InnerException.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet("GroupByDate/{startDate:datetime}/{endDate:datetime}/{groupingType:guid}")]
+        public async Task<IActionResult> GetGroupedByDate(DateTime startDate, DateTime endDate, Guid groupingType, [FromQuery] List<Guid>? serverIds = null)
+        {
+            try
+            {
+                if (serverIds == null || serverIds.Any() == false)
+                    return UnprocessableEntity();
+                startDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, startDate.Hour, startDate.Minute, 0);
+                endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, endDate.Hour, endDate.Minute, 0);
+                var query = new GetTotalMaintenanceGroupedByDateQuery(groupingType, startDate, endDate, serverIds);
+                var result = await _mediator.Send(query);
+                if (result == null || !result.Any())
+                    return NotFound("No maintenance data found for the specified date range.");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.InnerException.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }

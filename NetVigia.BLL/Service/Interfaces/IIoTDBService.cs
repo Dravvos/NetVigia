@@ -9,6 +9,7 @@ namespace NetVigia.BLL.Service.Interfaces
 {
     public interface IIoTDBService
     {
+        Task<double> GetUptimePercentageOfAllServersAsync(Guid userId, DateTime startDate, DateTime endDate);
         Task<double> GetUptimePercentageAsync(Guid serverId, DateTime startDate, DateTime? endDate);
         Task<bool> Insert(CheckDTO check);
         Task<List<CheckDTO>> ListChecks(Guid? serverId, DateTime startDate, DateTime? endDate, Guid? userId);
