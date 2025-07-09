@@ -138,6 +138,33 @@ namespace NetVigia.API.Controllers
             }
         }
 
+        [HttpGet("top5Downtime/{startDate:datetime}/{endDate:datetime}")]
+        public async Task<IActionResult> GetTop5DowntimeServers(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
+                if (string.IsNullOrEmpty(cookie))
+                    return Unauthorized();
+                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
+                var claims = decodedToken.Claims;
+                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+                if (usuarioId == Guid.Empty)
+                    return Unauthorized();
+             
+                var cmd = new GetTop5DowntimeServersQuery(usuarioId, startDate, endDate);
+                var uptimePercentage = await _sender.Send(cmd);
+                return Ok(uptimePercentage);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException == null)
+                    return StatusCode(500, ex.Message);
+                return StatusCode(500, ex.InnerException.Message);
+            }
+        }
+
+
         [HttpGet("uptime/{serverId}/{startDate:datetime}/{endDate:datetime}")]
         public async Task<IActionResult> GetUptimePercentage(Guid serverId, DateTime startDate, DateTime? endDate)
         {

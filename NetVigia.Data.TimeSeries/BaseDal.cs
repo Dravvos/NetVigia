@@ -14,6 +14,7 @@ namespace NetVigia.Data.TimeSeries
         private readonly string _passwordService;
 
         public readonly SessionPool sessionPool;
+        public readonly SessionPool.Builder sessionPoolBuilder;
 
         public BaseDal()
         {
@@ -23,7 +24,15 @@ namespace NetVigia.Data.TimeSeries
             _userService = configs[2].Split('=')[1];
             _passwordService = configs[3].Split('=')[1];
 
-            sessionPool = new SessionPool(_host, _port, _userService, _passwordService, 1000000);
+            sessionPool = new SessionPool(_host, _port, _userService, _passwordService, int.MaxValue);
+            var builder = new SessionPool.Builder();
+            builder.SetHost(_host);
+            builder.SetPort(_port);
+            builder.SetUsername(_userService);
+            builder.SetPassword(_passwordService);
+            builder.SetFetchSize(int.MaxValue);
+            builder.SetPoolSize(16);
+            sessionPoolBuilder = builder;
         }
 
     }

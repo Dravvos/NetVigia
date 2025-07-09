@@ -14,12 +14,15 @@ namespace NetVigia.BLL.Repository
 {
     public class IoTDBRepository : IIoTDBRepository
     {
-        private readonly SessionPool sessionPool;
+        private readonly SessionPool.Builder sessionPoolBuilder;
         private readonly IServerRepository _serverRepository;
+        private readonly SessionPool sessionPool;
 
         public IoTDBRepository(IServerRepository serverRepository)
         {
-            sessionPool = new BaseDal().sessionPool;
+            var dal = new BaseDal();
+            sessionPool = dal.sessionPool;
+            sessionPoolBuilder = dal.sessionPoolBuilder;
             _serverRepository = serverRepository;
         }
 
@@ -92,26 +95,26 @@ namespace NetVigia.BLL.Repository
         public async Task<bool> InsertCheck(List<object> values, List<string> measurements, DateTime timestamp, List<TSDataType> dataTypes, string url)
         {
             int ret = 0;
-            await sessionPool.Open(false);
-            if (sessionPool.IsOpen())
+            var session = sessionPoolBuilder.Build();
+            await session.Open(false);            
+            if (session.IsOpen())
             {
                 var rowRecord = new RowRecord(timestamp, values, measurements, dataTypes);
-                ret = await sessionPool.InsertRecordAsync(url, rowRecord);
+                ret = await session.InsertRecordAsync(url, rowRecord);
                 if (ret != 0)
                 {
-                    int ret1 = await sessionPool.CreateTimeSeries(url + "." + measurements[0], TSDataType.INT32, TSEncoding.TS_2DIFF, Compressor.LZ4);
-                    int ret2 = await sessionPool.CreateTimeSeries(url + "." + measurements[1], TSDataType.FLOAT, TSEncoding.GORILLA, Compressor.LZ4);
-                    int ret3 = await sessionPool.CreateTimeSeries(url + "." + measurements[2], TSDataType.BOOLEAN, TSEncoding.RLE, Compressor.LZ4);
+                    int ret1 = await session.CreateTimeSeries(url + "." + measurements[0], TSDataType.INT32, TSEncoding.TS_2DIFF, Compressor.LZ4);
+                    int ret2 = await session.CreateTimeSeries(url + "." + measurements[1], TSDataType.FLOAT, TSEncoding.GORILLA, Compressor.LZ4);
+                    int ret3 = await session.CreateTimeSeries(url + "." + measurements[2], TSDataType.BOOLEAN, TSEncoding.RLE, Compressor.LZ4);
                     for (int i = 0; i < measurements.Count; i++)
                     {
-                        ret = await sessionPool.InsertRecordAsync(url + "." + measurements[i], rowRecord);
+                        ret = await session.InsertRecordAsync(url + "." + measurements[i], rowRecord);
                         if (ret != 0)
                             return false;
                     }
 
                 }
-                await sessionPool.Close();
-                sessionPool.Dispose();
+                await session.Close();
             }
             if (ret == 0)
                 return true;

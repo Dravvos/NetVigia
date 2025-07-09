@@ -17,5 +17,6 @@ namespace NetVigia.BLL.Service.Interfaces
         Task<List<CheckDTO>> GetFailedChecksByDate(Guid serverId, DateTime startDate, DateTime? endDate);
         Task<double> GetAverageResponseTime(Guid serverId, DateTime startDate, DateTime? endDate);
         Task<List<CheckDTO>> GetAverageResponseTimeByDate(Guid serverId, DateTime startDate, DateTime? endDate);
+        Task<List<ServerDTO>> GetTop5DowntimeServers(Guid userId, DateTime startDate, DateTime endDate);
     }
 }

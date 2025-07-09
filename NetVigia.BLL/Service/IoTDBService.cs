@@ -258,7 +258,6 @@ namespace NetVigia.BLL.Service
         public async Task<double> GetUptimePercentageOfAllServersAsync(Guid userId, DateTime startDate, DateTime endDate)
         {
             startDate = startDate.Date;
-
             endDate = endDate.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
             var checks = new List<CheckDTO>();
@@ -276,6 +275,32 @@ namespace NetVigia.BLL.Service
             var uptimePercentage = Math.Round((double)upChecks.Count / checks.Count * 100, 2);
 
             return uptimePercentage;
+        }
+
+        public async Task<List<ServerDTO>> GetTop5DowntimeServers(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            startDate = startDate.Date;
+            endDate = endDate.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            var serverDownChecks = new Dictionary<Guid, List<CheckDTO>>();
+            var qtdServerDownChecks = new Dictionary<Guid, int>();
+
+            var servers = await _serverRepository.GetAllAsync(userId);
+            foreach (var server in servers)
+            {
+                serverDownChecks.Add(server.Id.GetValueOrDefault(), (await ListChecks(server.Id, startDate, endDate)).Where(x => x.Up == false).ToList());
+            }
+
+            foreach(var item in serverDownChecks)
+            {
+                qtdServerDownChecks.Add(item.Key, item.Value.Count);
+            }
+
+            qtdServerDownChecks = qtdServerDownChecks.OrderByDescending(x => x.Value).Take(5).ToDictionary();
+
+            var top5 = servers.Where(x => qtdServerDownChecks.Keys.Contains(x.Id.GetValueOrDefault())).ToList();
+
+            return top5;
         }
     }
 }
