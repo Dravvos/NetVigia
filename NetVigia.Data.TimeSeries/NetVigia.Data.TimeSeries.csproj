@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="Apache.IoTDB" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="9.0.7" />
   </ItemGroup>
 
   <ItemGroup>
