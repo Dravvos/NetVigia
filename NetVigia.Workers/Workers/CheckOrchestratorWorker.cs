@@ -54,12 +54,19 @@ namespace NetVigia.Workers.Workers
                     //Aguardar até a próxima sincronização
                     await Task.Delay(_syncInterval, stoppingToken);
                 }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogInformation("Operation cancelled - Turn off in progress");
+                    break;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in CheckOrchestratorWorker: {Message}", ex.Message);
                     await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                 }
             }
+            
+            _logger.LogInformation("Worker finished");
 
         }
 

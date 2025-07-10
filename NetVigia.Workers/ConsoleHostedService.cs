@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NetVigia.Work.Workers.Interfaces;
+using NetVigia.Workers.Workers.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetVigia.Work
+namespace NetVigia.Workers
 {
     public class ConsoleHostedService : BackgroundService
     {

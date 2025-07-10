@@ -21,6 +21,8 @@ namespace NetVigia.Workers.Workers
         private readonly ConcurrentDictionary<Guid, (Timer Timer, int Interval)> _timers = new();
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<CheckScheduler> _logger;
+        private bool _disposed;
+
 
         public CheckScheduler(IServiceProvider serviceProvider, ILogger<CheckScheduler> logger)
         {
@@ -30,11 +32,24 @@ namespace NetVigia.Workers.Workers
 
         public void Dispose()
         {
+            if (_disposed) return;
+
+            _disposed = true;
+
             foreach (var (timer, _) in _timers.Values)
             {
-                timer.Dispose();
+                try
+                {
+                    timer.Dispose();
+                }
+                catch
+                {
+                    // Ignore errors during disposal
+                }
             }
+
             _timers.Clear();
+
             GC.SuppressFinalize(this);
         }
 

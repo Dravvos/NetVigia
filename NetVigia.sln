@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetVigia.Data.TimeSeries", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetVigia.BLL", "NetVigia.BLL\NetVigia.BLL.csproj", "{4419959F-AF16-47BA-944B-792A26567DD6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetVigia.Work", "NetVigia.Work\NetVigia.Work.csproj", "{B08F7E4D-A82A-40A1-9BC9-7B215996CA21}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetVigia.Workers", "NetVigia.Workers\NetVigia.Workers.csproj", "{8457E87E-6F9F-9128-FEA4-AB2B1CF0B033}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +47,10 @@ Global
 		{4419959F-AF16-47BA-944B-792A26567DD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4419959F-AF16-47BA-944B-792A26567DD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4419959F-AF16-47BA-944B-792A26567DD6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B08F7E4D-A82A-40A1-9BC9-7B215996CA21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B08F7E4D-A82A-40A1-9BC9-7B215996CA21}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B08F7E4D-A82A-40A1-9BC9-7B215996CA21}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B08F7E4D-A82A-40A1-9BC9-7B215996CA21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8457E87E-6F9F-9128-FEA4-AB2B1CF0B033}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8457E87E-6F9F-9128-FEA4-AB2B1CF0B033}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8457E87E-6F9F-9128-FEA4-AB2B1CF0B033}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8457E87E-6F9F-9128-FEA4-AB2B1CF0B033}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
