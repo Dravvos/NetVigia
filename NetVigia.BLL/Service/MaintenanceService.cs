@@ -136,5 +136,13 @@ namespace NetVigia.BLL.Service
         {
             return await _repository.GetGroupedByDateAsync(groupingType, serverIds, startDate, endDate);
         }
+
+        public async Task<MaintenanceDTO> GetMaintenanceByIdAsync(Guid id)
+        {
+            if (id == Guid.Empty)
+                throw new ArgumentNullException("O ID da manutenção não pode ser vazio.");
+            var maintenance = await _repository.GetMaintenanceByIdAsync(id);
+            return maintenance;
+        }
     }
 }

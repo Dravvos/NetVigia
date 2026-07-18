@@ -32,7 +32,8 @@ namespace NetVigia.API.Controllers
                 var server = await _sender.Send(query);
                 if (server == null)
                     return NotFound();
-
+                if (server.UserId != Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
+                    return Forbid("You do not have permission to access this server");
                 return Ok(server);
             }
             catch (Exception ex)
@@ -53,10 +54,7 @@ namespace NetVigia.API.Controllers
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
 
-                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
-                var claims = decodedToken.Claims;
-
-                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+                var usuarioId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
                 if (usuarioId == Guid.Empty)
                     return UnprocessableEntity("Id do usuário não pode ser vazio");
 
@@ -132,6 +130,9 @@ namespace NetVigia.API.Controllers
                 if (id == Guid.Empty)
                     return BadRequest("Id do servidor não pode ser vazio");
 
+                var server = await _sender.Send(new GetServersByIdQuery(id));
+                if (server.UserId != Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
+                    return Forbid("You do not have permission to delete this server");
                 var cmd = new DeleteServerCommand(id);
                 await _sender.Send(cmd);
                 return NoContent();

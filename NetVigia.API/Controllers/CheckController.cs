@@ -1,12 +1,13 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Cryptography.X509Certificates;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NetVigia.BLL.Command;
 using NetVigia.BLL.Query.Checks;
 using NetVigia.DTO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 
 namespace NetVigia.API.Controllers
 {
@@ -51,9 +52,8 @@ namespace NetVigia.API.Controllers
                 HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
-                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
-                var claims = decodedToken.Claims;
-                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+
+                var usuarioId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
                 if (usuarioId == Guid.Empty)
                     return Unauthorized();
 
@@ -120,9 +120,8 @@ namespace NetVigia.API.Controllers
                 HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
-                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
-                var claims = decodedToken.Claims;
-                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+
+                var usuarioId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
                 if (usuarioId == Guid.Empty)
                     return Unauthorized();
 
@@ -146,9 +145,7 @@ namespace NetVigia.API.Controllers
                 HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
-                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
-                var claims = decodedToken.Claims;
-                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+                var usuarioId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
                 if (usuarioId == Guid.Empty)
                     return Unauthorized();
              

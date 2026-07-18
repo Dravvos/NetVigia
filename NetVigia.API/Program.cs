@@ -61,9 +61,9 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(typeof(SaveTabelaGeralCommandHandler).Assembly));
 
-var jwtSecret = builder.Configuration.GetSection("JwtSettings:Secret");
+var jwtSecret = Environment.GetEnvironmentVariable("NetVigiaJWTSecret");
 
-if (string.IsNullOrEmpty(jwtSecret.Value))
+if (string.IsNullOrEmpty(jwtSecret))
 {
     throw new InvalidOperationException("JWT SECRET IS NOT SET");
 }
@@ -76,7 +76,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret.Value)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ValidateLifetime = true
         };
         options.Events = new JwtBearerEvents

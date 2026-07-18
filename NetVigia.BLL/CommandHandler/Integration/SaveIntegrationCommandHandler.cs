@@ -19,7 +19,12 @@ namespace NetVigia.BLL.CommandHandler.Integration
         public async Task Handle(SaveIntegrationCommand request, CancellationToken cancellationToken)
         {
             if (request.dto.Id.HasValue)
-                await _integrationService.UpdateAsync(request.dto);            
+            {
+                var existingIntegration = await _integrationService.GetByUserAsync(request.dto.UserId);
+                if (existingIntegration == null)
+                    throw new KeyNotFoundException("Integration not found for the given user.");
+                await _integrationService.UpdateAsync(request.dto); 
+            }
             else
                 await _integrationService.CreateAsync(request.dto);
         }

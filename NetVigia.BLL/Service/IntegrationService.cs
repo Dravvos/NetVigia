@@ -64,6 +64,8 @@ namespace NetVigia.BLL.Service
         public async Task UpdateAsync(IntegrationDTO dto)
         {
             ValidarDTO(dto);
+            if ((await _repository.GetByIdAsync(dto.Id.Value)) == null)
+                throw new KeyNotFoundException();
             dto.DataAlteracao = DateTime.UtcNow;
 
             await _repository.UpdateAsync(dto);

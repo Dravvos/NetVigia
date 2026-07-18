@@ -9,6 +9,7 @@ namespace NetVigia.BLL.Service.Interfaces
 {
     public interface IMaintenanceService
     {
+        Task<MaintenanceDTO> GetMaintenanceByIdAsync(Guid id);
         Task<List<MaintenanceDTO>> GetAllMaintenanceAsync(Guid userId);
         Task<List<MaintenanceDTO>> GetByDateAsync(List<Guid> serverIds, DateTime startDate, DateTime endDate);
         Task<Dictionary<string, int>> GetGroupedByDateAsync(Guid groupingType, List<Guid> serverIds, DateTime startDate, DateTime endDate);

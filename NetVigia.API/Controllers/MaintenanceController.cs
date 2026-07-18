@@ -32,9 +32,7 @@ namespace NetVigia.API.Controllers
                 HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
-                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
-                var claims = decodedToken.Claims;
-                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+                var usuarioId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
                 if (usuarioId == Guid.Empty)
                     return Unauthorized();
 
@@ -63,9 +61,7 @@ namespace NetVigia.API.Controllers
                 HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
-                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
-                var claims = decodedToken.Claims;
-                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+                var usuarioId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
                 if (usuarioId == Guid.Empty)
                     return Unauthorized();
 
@@ -217,6 +213,7 @@ namespace NetVigia.API.Controllers
             {
                 if (id == Guid.Empty)
                     return BadRequest("Invalid maintenance ID.");
+                
                 var command = new DeleteMaintenanceCommand(id);
                 await _mediator.Send(command);
                 return NoContent();

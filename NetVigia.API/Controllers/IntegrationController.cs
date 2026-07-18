@@ -31,9 +31,7 @@ namespace NetVigia.API.Controllers
                 HttpContext.Request.Cookies.TryGetValue("AuthToken", out var cookie);
                 if (string.IsNullOrEmpty(cookie))
                     return Unauthorized();
-                var decodedToken = new JwtSecurityTokenHandler().ReadJwtToken(cookie);
-                var claims = decodedToken.Claims;
-                var usuarioId = Guid.Parse(claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)?.Value);
+                var usuarioId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
                 if (usuarioId == Guid.Empty)
                     return Unauthorized();
                 var query = new GetIntegrationsByUserQuery(usuarioId);
@@ -106,6 +104,12 @@ namespace NetVigia.API.Controllers
             {
                 if (id == Guid.Empty)
                     return BadRequest("ID da integração não pode ser nulo");
+
+                var userId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub));
+                var integration = await _sender.Send(new GetIntegrationsByUserQuery(userId));
+                if(integration == null || !integration.Any(i => i.Id == id))
+                    return NotFound("Integração não encontrada para o usuário");
+
                 var cmd = new DeleteIntegrationCommand(id);
                 await _sender.Send(cmd);
                 return Ok("Integração excluída com sucesso");

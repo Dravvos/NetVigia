@@ -20,6 +20,11 @@ namespace NetVigia.BLL.CommandHandler.Server
         {
             if (request.dto.Id.HasValue)
             {
+                var server =  _serverService.GetById(request.dto.Id.Value).Result;
+                if(server.UserId != request.dto.UserId)
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to update this server.");
+                }
                 return _serverService.UpdateAsync(request.dto);
             }
             else

@@ -18,8 +18,13 @@ namespace NetVigia.BLL.CommandHandler.Maintenance
         }
         public async Task Handle(SaveMaintenanceCommand request, CancellationToken cancellationToken)
         {
-            if(request.dto.Id.HasValue)
+            if (request.dto.Id.HasValue)
             {
+                var existingMaintenance = await _maintenanceService.GetMaintenanceByIdAsync(request.dto.Id.Value);
+                if (existingMaintenance != null && existingMaintenance.UserId != request.dto.UserId)
+                {
+                    throw new UnauthorizedAccessException("You are not authorized to update this maintenance.");
+                }
                 await _maintenanceService.UpdateMaintenanceAsync(request.dto);
             }
             else

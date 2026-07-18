@@ -35,11 +35,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddErrorDescriber<LocalizedIdentityErrorDescriber>();
 
 
-var jwtSecret = builder.Configuration.GetSection("JwtSettings:Secret");
+var jwtSecret = Environment.GetEnvironmentVariable("NetVigiaJWTSecret");
 var issuer = builder.Configuration.GetSection("JwtSettings:Issuer");
 var audience = builder.Configuration.GetSection("JwtSettings:Audience");
 
-if (string.IsNullOrEmpty(jwtSecret.Value))
+if (string.IsNullOrEmpty(jwtSecret))
 {
     throw new InvalidOperationException("JWT SECRET IS NOT SET");
 }
@@ -68,7 +68,7 @@ builder.Services.AddAuthentication(options =>
 
         ValidIssuer = issuer.Value,
         ValidAudience = audience.Value,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret.Value))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
     };
     options.Events = new JwtBearerEvents
     {
